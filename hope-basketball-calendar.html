@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hope Youth Basketball Schedule & Gym Calendar (2026-2027)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: black !important; }
+      .print-shadow-none { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+      .calendar-day-cell { min-height: 100px !important; }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-500 selection:text-white">
+
+  <header class="bg-slate-800/90 border-b border-slate-700/80 sticky top-0 z-30 backdrop-blur-md no-print">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center text-white shadow-lg shadow-emerald-900/30">
+            <i class="fa-solid fa-basketball text-xl"></i>
+          </div>
+          <div>
+            <h1 class="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+              Hope Youth Basketball
+              <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2026–2027</span>
+            </h1>
+            <p class="text-xs text-slate-400">Official Master Gym & Game Schedule</p>
+          </div>
+        </div>
+
+        <div class="flex items-center flex-wrap gap-2">
+          <button onclick="openAddEventModal()" class="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold flex items-center gap-2 transition shadow-md shadow-indigo-950/40">
+            <i class="fa-solid fa-plus"></i> Add Event
+          </button>
+          <button id="exportIcsBtn" onclick="exportICalendar()" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold flex items-center gap-2 transition border border-slate-600">
+            <i class="fa-solid fa-calendar-plus text-emerald-400"></i> Export to iCal
+          </button>
+          <button onclick="window.print()" class="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-2 transition shadow-md shadow-emerald-900/40">
+            <i class="fa-solid fa-print"></i> Print
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+    <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700/60 shadow-xl flex flex-col lg:flex-row lg:items-center justify-between gap-4 no-print">
+      <div class="flex items-center bg-slate-900/80 p-1.5 rounded-xl border border-slate-700/80 overflow-x-auto" id="monthTabs">
+        <button onclick="switchMonth(0)" class="month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap" data-month="0">Nov 2026</button>
+        <button onclick="switchMonth(1)" class="month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap" data-month="1">Dec 2026</button>
+        <button onclick="switchMonth(2)" class="month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap" data-month="2">Jan 2027</button>
+        <button onclick="switchMonth(3)" class="month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap" data-month="3">Feb 2027</button>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+        <div class="flex items-center flex-wrap gap-1.5" id="categoryFilters">
+          <button onclick="setFilter('ALL')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-filter="ALL">All Events</button>
+          <button onclick="setFilter('HOME')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-emerald-500/30 text-emerald-400 bg-emerald-950/30 hover:bg-emerald-900/50" data-filter="HOME">
+            <i class="fa-solid fa-house text-[10px] mr-1"></i> Home
+          </button>
+          <button onclick="setFilter('AWAY')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-blue-500/30 text-blue-400 bg-blue-950/30 hover:bg-blue-900/50" data-filter="AWAY">
+            <i class="fa-solid fa-plane-departure text-[10px] mr-1"></i> Away
+          </button>
+          <button onclick="setFilter('PRACTICE')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-amber-500/30 text-amber-400 bg-amber-950/30 hover:bg-amber-900/50" data-filter="PRACTICE">
+            <i class="fa-solid fa-stopwatch text-[10px] mr-1"></i> Practice
+          </button>
+          <button onclick="setFilter('EVENT')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-rose-500/30 text-rose-400 bg-rose-950/30 hover:bg-rose-900/50" data-filter="EVENT">
+            <i class="fa-solid fa-school-flag text-[10px] mr-1"></i> Events
+          </button>
+        </div>
+
+        <div class="relative flex items-center gap-2">
+          <button id="teamDropdownBtn" onclick="toggleTeamDropdown(event)" class="w-full sm:w-auto bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 flex items-center justify-between gap-2 cursor-pointer select-none">
+            <span id="teamDropdownLabel">All Teams</span>
+            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="teamDropdownChevron"></i>
+          </button>
+
+          <button onclick="exportTeamSnapCSV()" class="px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold flex items-center gap-1.5 transition shadow-sm whitespace-nowrap" title="Export TeamSnap CSV starting from today">
+            <i class="fa-solid fa-file-csv text-emerald-300"></i> Export TeamSnap CSV
+          </button>
+
+          <div id="teamDropdownMenu" class="hidden absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-48 bg-slate-800 border border-slate-700 rounded-xl shadow-2xl z-40 p-2 space-y-1">
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700/60 cursor-pointer text-xs font-semibold text-slate-200">
+              <input type="checkbox" value="ALL" checked onchange="handleTeamCheckboxChange(this)" class="team-checkbox rounded border-slate-600 text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900">
+              <span>All Teams</span>
+            </label>
+            <div class="h-px bg-slate-700/80 my-1"></div>
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700/60 cursor-pointer text-xs font-semibold text-slate-200">
+              <input type="checkbox" value="1/2A" onchange="handleTeamCheckboxChange(this)" class="team-checkbox rounded border-slate-600 text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900">
+              <span>1/2A</span>
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700/60 cursor-pointer text-xs font-semibold text-slate-200">
+              <input type="checkbox" value="Hope FB" onchange="handleTeamCheckboxChange(this)" class="team-checkbox rounded border-slate-600 text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900">
+              <span>Hope FB</span>
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700/60 cursor-pointer text-xs font-semibold text-slate-200">
+              <input type="checkbox" value="Hope JVB" onchange="handleTeamCheckboxChange(this)" class="team-checkbox rounded border-slate-600 text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900">
+              <span>Hope JVB</span>
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700/60 cursor-pointer text-xs font-semibold text-slate-200">
+              <input type="checkbox" value="Hope JVG" onchange="handleTeamCheckboxChange(this)" class="team-checkbox rounded border-slate-600 text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900">
+              <span>Hope JVG</span>
+            </label>
+            <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700/60 cursor-pointer text-xs font-semibold text-slate-200">
+              <input type="checkbox" value="Hope VB" onchange="handleTeamCheckboxChange(this)" class="team-checkbox rounded border-slate-600 text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900">
+              <span>Hope VB</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-slate-800 rounded-2xl border border-slate-700/60 shadow-2xl overflow-hidden flex flex-col print-shadow-none">
+      <div class="bg-slate-800/90 px-6 py-4 border-b border-slate-700/60 flex items-center justify-between">
+        <h2 id="calendarMonthTitle" class="text-2xl font-black text-white tracking-tight"></h2>
+        <div class="hidden sm:flex items-center space-x-4 text-xs font-medium text-slate-400 no-print">
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Home (@ Hope)</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Away</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Practice</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Closed / Event</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-7 bg-slate-900/90 border-b border-slate-700/60 text-center text-xs font-bold text-slate-400 uppercase tracking-wider py-2.5">
+        <div>Sun</div>
+        <div>Mon</div>
+        <div>Tue</div>
+        <div>Wed</div>
+        <div>Thu</div>
+        <div>Fri</div>
+        <div>Sat</div>
+      </div>
+
+      <div id="calendarGrid" class="grid grid-cols-7 auto-rows-fr gap-px bg-slate-700/50 min-h-[580px]"></div>
+    </div>
+
+    <div class="flex justify-end no-print">
+      <button onclick="resetToDefaultEvents()" class="text-xs text-slate-500 hover:text-slate-400 underline transition">
+        Reset Schedule to Original Defaults
+      </button>
+    </div>
+  </main>
+
+  <div id="eventModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="eventModalCard">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square text-indigo-400"></i> Edit Event Details
+        </h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="editEventForm" onsubmit="handleSaveEditedEvent(event)" class="space-y-3">
+        <input type="hidden" id="editEventId">
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Event Title</label>
+          <input type="text" id="editEventTitle" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Category</label>
+            <select id="editEventCategory" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+              <option value="HOME">Home Game (@ Hope)</option>
+              <option value="AWAY">Away Game</option>
+              <option value="PRACTICE">Practice</option>
+              <option value="EVENT">School Event / Closed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
+            <input type="date" id="editEventDate" required min="2026-11-01" max="2027-02-28" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Time / Duration</label>
+          <input type="text" id="editEventTime" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Location</label>
+          <input type="text" id="editEventLocation" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Additional Notes</label>
+          <input type="text" id="editEventDetails" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="mt-6 pt-3 border-t border-slate-700 flex justify-between items-center">
+          <button type="button" onclick="handleDeleteCurrentEvent()" class="px-3 py-2 bg-rose-600/20 hover:bg-rose-600/40 text-rose-300 border border-rose-500/30 rounded-lg text-xs font-semibold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-trash"></i> Delete
+          </button>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeModal()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold transition">
+              Cancel
+            </button>
+            <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-indigo-950/40">
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="addModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-opacity duration-200">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl transform scale-95 transition-transform duration-200" id="addModalCard">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-700 mb-4">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-plus-circle text-emerald-400"></i> Add New Event
+        </h3>
+        <button onclick="closeAddModal()" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700 transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <form id="addEventForm" onsubmit="handleAddNewEvent(event)" class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Event Title</label>
+          <input type="text" id="newEventTitle" required placeholder="e.g. Practice 5/6G or Hope VB vs Blairstown" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Category</label>
+            <select id="newEventCategory" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+              <option value="HOME">Home Game (@ Hope)</option>
+              <option value="AWAY">Away Game</option>
+              <option value="PRACTICE" selected>Practice</option>
+              <option value="EVENT">School Event / Closed</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-1">Date</label>
+            <input type="date" id="newEventDate" required min="2026-11-01" max="2027-02-28" value="2026-11-09" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Time / Duration</label>
+          <input type="text" id="newEventTime" required placeholder="e.g. 5:00 PM - 6:30 PM" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-400 mb-1">Location</label>
+          <input type="text" id="newEventLocation" placeholder="Hope School Gym" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="mt-6 pt-3 border-t border-slate-700 flex justify-end gap-2">
+          <button type="button" onclick="closeAddModal()" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold transition">
+            Cancel
+          </button>
+          <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-md shadow-emerald-950/40">
+            Add to Calendar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const defaultEventsData = [
+      { id: 'n09-1', date: '2026-11-09', title: '1/2A: 4:30-5:30', time: '4:30 PM - 5:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n09-2', date: '2026-11-09', title: 'Hope FB: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n09-3', date: '2026-11-09', title: 'Hope JVB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n10-1', date: '2026-11-10', title: 'Hope JVG: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n10-2', date: '2026-11-10', title: 'Hope VB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n11-1', date: '2026-11-11', title: '1/2A: 4:30-5:30', time: '4:30 PM - 5:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n11-2', date: '2026-11-11', title: 'Hope FB: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n11-3', date: '2026-11-11', title: 'Hope JVB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n12-1', date: '2026-11-12', title: 'Hope JVG: 5:00-6:30', time: '5:00 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n12-2', date: '2026-11-12', title: 'Hope VB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n13-1', date: '2026-11-13', title: 'Hope VB: 5:00-6:30', time: '5:00 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n13-2', date: '2026-11-13', title: 'Coaches Mtg: 6:30-8', time: '6:30 PM - 8:00 PM', category: 'EVENT', details: 'All basketball coaches meeting.' },
+      { id: 'n16-1', date: '2026-11-16', title: '1/2A: 4:30-5:30', time: '4:30 PM - 5:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n16-2', date: '2026-11-16', title: 'Hope FB: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n16-3', date: '2026-11-16', title: 'Hope JVB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n17-1', date: '2026-11-17', title: 'Hope JVG: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n17-2', date: '2026-11-17', title: 'Hope VB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n18-1', date: '2026-11-18', title: '1/2A: 4:30-5:30', time: '4:30 PM - 5:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n18-2', date: '2026-11-18', title: 'Hope FB: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n18-3', date: '2026-11-18', title: 'Hope JVB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n19-1', date: '2026-11-19', title: 'Panther Paw Night', time: 'All Day', category: 'EVENT', details: 'School Event / Gym Closed for practice.' },
+      { id: 'n20-1', date: '2026-11-20', title: 'Hope JVG: 5:00-6:30', time: '5:00 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n20-2', date: '2026-11-20', title: 'Hope VB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n23-1', date: '2026-11-23', title: '1/2A: 4:30-5:30', time: '4:30 PM - 5:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n23-2', date: '2026-11-23', title: 'Hope FB: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n23-3', date: '2026-11-23', title: 'Hope JVB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n24-1', date: '2026-11-24', title: 'Hope JVG: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n24-2', date: '2026-11-24', title: 'Hope VB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n25-1', date: '2026-11-25', title: 'Hope FB: 4:30-5:30', time: '4:30 PM - 5:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n25-2', date: '2026-11-25', title: 'Hope JVB: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n25-3', date: '2026-11-25', title: 'Hope JVG: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n25-4', date: '2026-11-25', title: 'Hope VB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n26-1', date: '2026-11-26', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Thanksgiving Holiday' },
+      { id: 'n27-1', date: '2026-11-27', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Thanksgiving Break' },
+      { id: 'n30-1', date: '2026-11-30', title: '1/2A: 4:30-5:30', time: '4:30 PM - 5:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n30-2', date: '2026-11-30', title: 'Hope FB: 5:30-6:30', time: '5:30 PM - 6:30 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'n30-3', date: '2026-11-30', title: 'Hope JVB: 6:30-8:00', time: '6:30 PM - 8:00 PM', category: 'PRACTICE', location: 'Hope School Gym' },
+      { id: 'd01-1', date: '2026-12-01', title: '6PM: Hope FB @ Blair', time: '6:00 PM', category: 'AWAY', location: 'Blairstown' },
+      { id: 'd01-2', date: '2026-12-01', title: '7PM: Hope JVB @ Blair', time: '7:00 PM', category: 'AWAY', location: 'Blairstown' },
+      { id: 'd01-3', date: '2026-12-01', title: '8PM: Hope JVG @ Blair', time: '8:00 PM', category: 'AWAY', location: 'Blairstown' },
+      { id: 'd01-4', date: '2026-12-01', title: '8PM: Hope VB @ Knowlton', time: '8:00 PM', category: 'AWAY', location: 'Knowlton' },
+      { id: 'd03-1', date: '2026-12-03', title: 'Craft Market Prep', time: 'All Day', category: 'EVENT', details: 'Hope Christmas Craft Market Prep (Gym Unavailable)' },
+      { id: 'd04-1', date: '2026-12-04', title: 'Craft Market Prep', time: 'All Day', category: 'EVENT', details: 'Hope Christmas Craft Market Prep (Gym Unavailable)' },
+      { id: 'd07-1', date: '2026-12-07', title: '7PM: Hope JVG @ Liberty', time: '7:00 PM', category: 'AWAY', location: 'Liberty' },
+      { id: 'd10-1', date: '2026-12-10', title: '6PM: Hope JVG @ Liberty', time: '6:00 PM', category: 'AWAY', location: 'Liberty' },
+      { id: 'd11-1', date: '2026-12-11', title: '6PM: Hope FB vs White', time: '6:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'd11-2', date: '2026-12-11', title: '7PM: Hope JVB vs Blair', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'd11-3', date: '2026-12-11', title: '8PM: Hope VB vs White', time: '8:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'd17-1', date: '2026-12-17', title: '6PM: Hope FB @ Liberty', time: '6:00 PM', category: 'AWAY', location: 'Liberty' },
+      { id: 'd17-2', date: '2026-12-17', title: '7PM: Hope JVB @ Liberty', time: '7:00 PM', category: 'AWAY', location: 'Liberty' },
+      { id: 'd21-1', date: '2026-12-21', title: '7PM: Hope JVG @ Knowlton', time: '7:00 PM', category: 'AWAY', location: 'Knowlton' },
+      { id: 'd23-1', date: '2026-12-23', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Holiday Break' },
+      { id: 'd24-1', date: '2026-12-24', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Christmas Eve' },
+      { id: 'd25-1', date: '2026-12-25', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Christmas Day' },
+      { id: 'd26-1', date: '2026-12-26', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Holiday Break' },
+      { id: 'd27-1', date: '2026-12-27', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Holiday Break' },
+      { id: 'd28-1', date: '2026-12-28', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Holiday Break' },
+      { id: 'd29-1', date: '2026-12-29', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Holiday Break' },
+      { id: 'd30-1', date: '2026-12-30', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'Holiday Break' },
+      { id: 'd31-1', date: '2026-12-31', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'New Year\'s Eve' },
+      { id: 'j01-1', date: '2027-01-01', title: 'School Closed', time: 'All Day', category: 'EVENT', details: 'New Year\'s Day' },
+      { id: 'j06-1', date: '2027-01-06', title: '7PM: Hope JVG @ White', time: '7:00 PM', category: 'AWAY', location: 'White' },
+      { id: 'j08-1', date: '2027-01-08', title: '6PM: Hope FB vs Harmony', time: '6:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j08-2', date: '2027-01-08', title: '7PM: Hope JVB vs White', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j08-3', date: '2027-01-08', title: '8PM: Hope VB vs White', time: '8:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j12-1', date: '2027-01-12', title: 'Winter Concert', time: 'All Day', category: 'EVENT', details: 'School Event / Gym Unavailable' },
+      { id: 'j15-1', date: '2027-01-15', title: '6PM: Hope FB vs Liberty', time: '6:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j15-2', date: '2027-01-15', title: '7PM: Hope JVB vs Blair', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j15-3', date: '2027-01-15', title: '8PM: Hope JVG vs Liberty', time: '8:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j18-1', date: '2027-01-18', title: 'MLK Jr. Day Closed', time: 'All Day', category: 'EVENT', details: 'Martin Luther King Jr. Day' },
+      { id: 'j19-1', date: '2027-01-19', title: '7PM: Hope JVG vs Liberty', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j19-2', date: '2027-01-19', title: '8PM: Hope VB vs Liberty', time: '8:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j21-1', date: '2027-01-21', title: '6PM: Hope FB vs White', time: '6:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j21-2', date: '2027-01-21', title: '7PM: Hope JVB vs Blair', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j27-1', date: '2027-01-27', title: '6PM: Hope FB @ Harmony', time: '6:00 PM', category: 'AWAY', location: 'Harmony' },
+      { id: 'j27-2', date: '2027-01-27', title: '7PM: Hope JVG vs White', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j27-3', date: '2027-01-27', title: '8PM: Hope VB vs Blair', time: '8:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'j30-1', date: '2027-01-30', title: '10AM: Hope JVB @ Blair', time: '10:00 AM', category: 'AWAY', location: 'Blairstown' },
+      { id: 'j30-2', date: '2027-01-30', title: '1PM: Hope VB @ Blair', time: '1:00 PM', category: 'AWAY', location: 'Blairstown' },
+      { id: 'f01-1', date: '2027-02-01', title: '8PM: Hope VB @ Liberty', time: '8:00 PM', category: 'AWAY', location: 'Liberty' },
+      { id: 'f05-1', date: '2027-02-05', title: '6PM: Hope FB vs Knowlton', time: '6:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'f05-2', date: '2027-02-05', title: '7PM: Hope JVB vs Liberty', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'f05-3', date: '2027-02-05', title: '8PM: Hope JVG vs Blair', time: '8:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'f10-1', date: '2027-02-10', title: '6PM: Hope FB @ White', time: '6:00 PM', category: 'AWAY', location: 'White' },
+      { id: 'f10-2', date: '2027-02-10', title: '7PM: Hope JVB @ White', time: '7:00 PM', category: 'AWAY', location: 'White' },
+      { id: 'f10-3', date: '2027-02-10', title: '8PM: Hope VB @ White', time: '8:00 PM', category: 'AWAY', location: 'White' },
+      { id: 'f12-1', date: '2027-02-12', title: '7PM: Hope JVG vs Blair', time: '7:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'f12-2', date: '2027-02-12', title: '8PM: Hope VB vs Knowlton', time: '8:00 PM', category: 'HOME', location: 'Hope School Gym' },
+      { id: 'f13-1', date: '2027-02-13', title: '12PM: Hope FB @ Blair', time: '12:00 PM', category: 'AWAY', location: 'Blairstown' },
+      { id: 'f13-2', date: '2027-02-13', title: '1PM: Hope JVB @ Blair', time: '1:00 PM', category: 'AWAY', location: 'Blairstown' },
+      { id: 'f15-1', date: '2027-02-15', title: 'Presidents Day Closed', time: 'All Day', category: 'EVENT', details: 'Presidents\' Day' },
+      { id: 'f16-1', date: '2027-02-16', title: '8PM: Hope VB @ Knowlton', time: '8:00 PM', category: 'AWAY', location: 'Knowlton' }
+    ];
+
+    let eventsData = [];
+    let selectedTeams = ['ALL'];
+    let currentMonthIndex = 0;
+    let currentFilter = 'ALL';
+    const STORAGE_KEY = 'hope_basketball_events_v4';
+
+    const months = [
+      { name: 'NOVEMBER 2026', year: 2026, monthIdx: 10, days: 30, startDay: 0 },
+      { name: 'DECEMBER 2026', year: 2026, monthIdx: 11, days: 31, startDay: 2 },
+      { name: 'JANUARY 2027', year: 2027, monthIdx: 0, days: 31, startDay: 5 },
+      { name: 'FEBRUARY 2027', year: 2027, monthIdx: 1, days: 28, startDay: 1 }
+    ];
+
+    function loadEvents() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          eventsData = JSON.parse(saved);
+        } catch (e) {
+          eventsData = [...defaultEventsData];
+        }
+      } else {
+        eventsData = [...defaultEventsData];
+        saveEvents();
+      }
+    }
+
+    function saveEvents() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(eventsData));
+      } catch (e) {
+        console.warn('Unable to save to localStorage:', e);
+      }
+    }
+
+    function toggleTeamDropdown(event) {
+      if (event) event.stopPropagation();
+      const menu = document.getElementById('teamDropdownMenu');
+      const chevron = document.getElementById('teamDropdownChevron');
+      if (menu) menu.classList.toggle('hidden');
+      if (chevron) chevron.classList.toggle('rotate-180');
+    }
+
+    function handleTeamCheckboxChange(checkbox) {
+      const allCheckboxes = document.querySelectorAll('.team-checkbox');
+
+      if (checkbox.value === 'ALL') {
+        if (checkbox.checked) {
+          allCheckboxes.forEach(cb => {
+            if (cb.value !== 'ALL') cb.checked = false;
+          });
+          selectedTeams = ['ALL'];
+        } else {
+          checkbox.checked = true;
+          selectedTeams = ['ALL'];
+        }
+      } else {
+        const allBtn = Array.from(allCheckboxes).find(cb => cb.value === 'ALL');
+        if (allBtn) allBtn.checked = false;
+
+        selectedTeams = Array.from(allCheckboxes)
+          .filter(cb => cb.checked && cb.value !== 'ALL')
+          .map(cb => cb.value);
+
+        if (selectedTeams.length === 0) {
+          if (allBtn) allBtn.checked = true;
+          selectedTeams = ['ALL'];
+        }
+      }
+
+      updateTeamDropdownLabel();
+      renderCalendarGrid();
+    }
+
+    function updateTeamDropdownLabel() {
+      const label = document.getElementById('teamDropdownLabel');
+      if (!label) return;
+
+      if (selectedTeams.includes('ALL') || selectedTeams.length === 0) {
+        label.innerText = 'All Teams';
+      } else if (selectedTeams.length === 1) {
+        label.innerText = selectedTeams[0];
+      } else {
+        label.innerText = `${selectedTeams.length} Teams Selected`;
+      }
+    }
+
+    function resetToDefaultEvents() {
+      if (confirm('Are you sure you want to reset all events back to the original default schedule?')) {
+        eventsData = [...defaultEventsData];
+        saveEvents();
+        renderCalendarGrid();
+      }
+    }
+
+    function initCalendar() {
+      loadEvents();
+      switchMonth(0);
+      updateFilterStyles();
+
+      document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('teamDropdownMenu');
+        const btn = document.getElementById('teamDropdownBtn');
+        if (dropdown && btn && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.add('hidden');
+          const chevron = document.getElementById('teamDropdownChevron');
+          if (chevron) chevron.classList.remove('rotate-180');
+        }
+      });
+    }
+
+    function switchMonth(idx) {
+      currentMonthIndex = idx;
+
+      document.querySelectorAll('.month-tab-btn').forEach((btn, i) => {
+        if (i === idx) {
+          btn.className = 'month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap bg-emerald-600 text-white shadow-md shadow-emerald-900/40';
+        } else {
+          btn.className = 'month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800';
+        }
+      });
+
+      renderCalendarGrid();
+    }
+
+    function setFilter(filter) {
+      currentFilter = filter;
+      updateFilterStyles();
+      renderCalendarGrid();
+    }
+
+    function updateFilterStyles() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const type = btn.dataset.filter;
+        if (type === currentFilter) {
+          if (type === 'ALL') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-white border border-slate-500 shadow-sm';
+          if (type === 'HOME') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white border border-emerald-400 shadow-sm';
+          if (type === 'AWAY') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white border border-blue-400 shadow-sm';
+          if (type === 'PRACTICE') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white border border-amber-400 shadow-sm';
+          if (type === 'EVENT') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white border border-rose-400 shadow-sm';
+        } else {
+          if (type === 'ALL') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 bg-slate-900/50 hover:bg-slate-800 hover:text-white';
+          if (type === 'HOME') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-950/30 hover:bg-emerald-900/50 border border-emerald-500/20';
+          if (type === 'AWAY') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-400 bg-blue-950/30 hover:bg-blue-900/50 border border-blue-500/20';
+          if (type === 'PRACTICE') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-400 bg-amber-950/30 hover:bg-amber-900/50 border border-amber-500/20';
+          if (type === 'EVENT') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-400 bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/20';
+        }
+      });
+    }
+
+    function renderCalendarGrid() {
+      const monthConfig = months[currentMonthIndex];
+      document.getElementById('calendarMonthTitle').innerText = monthConfig.name;
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      for (let i = 0; i < monthConfig.startDay; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'bg-slate-800/40 p-2 opacity-30 min-h-[105px]';
+        grid.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= monthConfig.days; day++) {
+        const dateStr = `${monthConfig.year}-${String(monthConfig.monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        let dayEvents = eventsData.filter(e => e.date === dateStr);
+
+        if (currentFilter !== 'ALL') {
+          dayEvents = dayEvents.filter(e => e.category === currentFilter);
+        }
+
+        if (!selectedTeams.includes('ALL')) {
+          dayEvents = dayEvents.filter(e => {
+            const titleUpper = e.title.toUpperCase();
+            const detailsUpper = (e.details || '').toUpperCase();
+            return selectedTeams.some(team => {
+              const teamUpper = team.toUpperCase();
+              return titleUpper.includes(teamUpper) || detailsUpper.includes(teamUpper);
+            });
+          });
+        }
+
+        const isClosedDay = dayEvents.some(e => e.category === 'EVENT' && (e.title.toLowerCase().includes('closed') || e.title.toLowerCase().includes('market prep') || e.title.toLowerCase().includes('concert') || e.title.toLowerCase().includes('panther paw')));
+
+        const cell = document.createElement('div');
+        cell.className = `calendar-day-cell p-2 flex flex-col justify-start transition ${isClosedDay ? 'bg-rose-950/20 border-rose-900/30' : 'bg-slate-800 hover:bg-slate-750'}`;
+
+        let html = `
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-xs font-extrabold ${isClosedDay ? 'text-rose-400' : 'text-slate-300'}">${day}</span>
+          </div>
+          <div class="flex flex-col gap-1 overflow-y-auto max-h-[95px]">
+        `;
+
+        dayEvents.forEach(evt => {
+          let badgeStyle = '';
+          if (evt.category === 'HOME') badgeStyle = 'bg-emerald-950/80 text-emerald-300 border-l-2 border-emerald-500 hover:bg-emerald-900';
+          else if (evt.category === 'AWAY') badgeStyle = 'bg-blue-950/80 text-blue-300 border-l-2 border-blue-500 hover:bg-blue-900';
+          else if (evt.category === 'PRACTICE') badgeStyle = 'bg-amber-950/80 text-amber-300 border-l-2 border-amber-500 hover:bg-amber-900';
+          else if (evt.category === 'EVENT') badgeStyle = 'bg-rose-950/90 text-rose-300 border-l-2 border-rose-500 hover:bg-rose-900';
+
+          html += `
+            <div onclick="openEditModal('${evt.id}')" class="cursor-pointer text-[10px] font-semibold px-1.5 py-1 rounded ${badgeStyle} leading-tight transition truncate" title="Click to edit event">
+              ${evt.title}
+            </div>
+          `;
+        });
+
+        html += `</div>`;
+        cell.innerHTML = html;
+        grid.appendChild(cell);
+      }
+
+      const totalCells = monthConfig.startDay + monthConfig.days;
+      const trailingCells = (7 - (totalCells % 7)) % 7;
+      for (let i = 0; i < trailingCells; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'bg-slate-800/40 p-2 opacity-30 min-h-[105px]';
+        grid.appendChild(emptyCell);
+      }
+    }
+
+    function openEditModal(eventId) {
+      const evt = eventsData.find(e => e.id === eventId);
+      if (!evt) return;
+
+      document.getElementById('editEventId').value = evt.id;
+      document.getElementById('editEventTitle').value = evt.title;
+      document.getElementById('editEventCategory').value = evt.category;
+      document.getElementById('editEventDate').value = evt.date;
+      document.getElementById('editEventTime').value = evt.time;
+      document.getElementById('editEventLocation').value = evt.location || 'Hope School Gym';
+      document.getElementById('editEventDetails').value = evt.details || '';
+
+      const modal = document.getElementById('eventModal');
+      const card = document.getElementById('eventModalCard');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      card.classList.remove('scale-95');
+      card.classList.add('scale-100');
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('eventModal');
+      const card = document.getElementById('eventModalCard');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      card.classList.remove('scale-100');
+      card.classList.add('scale-95');
+    }
+
+    function handleSaveEditedEvent(e) {
+      e.preventDefault();
+      const id = document.getElementById('editEventId').value;
+      const evtIndex = eventsData.findIndex(e => e.id === id);
+
+      if (evtIndex !== -1) {
+        eventsData[evtIndex].title = document.getElementById('editEventTitle').value.trim();
+        eventsData[evtIndex].category = document.getElementById('editEventCategory').value;
+        eventsData[evtIndex].date = document.getElementById('editEventDate').value;
+        eventsData[evtIndex].time = document.getElementById('editEventTime').value.trim();
+        eventsData[evtIndex].location = document.getElementById('editEventLocation').value.trim();
+        eventsData[evtIndex].details = document.getElementById('editEventDetails').value.trim();
+
+        saveEvents();
+        renderCalendarGrid();
+        closeModal();
+      }
+    }
+
+    function handleDeleteCurrentEvent() {
+      const id = document.getElementById('editEventId').value;
+      if (confirm('Are you sure you want to delete this event?')) {
+        eventsData = eventsData.filter(e => e.id !== id);
+        saveEvents();
+        renderCalendarGrid();
+        closeModal();
+      }
+    }
+
+    function openAddEventModal() {
+      const modal = document.getElementById('addModal');
+      const card = document.getElementById('addModalCard');
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      card.classList.remove('scale-95');
+      card.classList.add('scale-100');
+    }
+
+    function closeAddModal() {
+      const modal = document.getElementById('addModal');
+      const card = document.getElementById('addModalCard');
+      modal.classList.add('opacity-0', 'pointer-events-none');
+      card.classList.remove('scale-100');
+      card.classList.add('scale-95');
+    }
+
+    function handleAddNewEvent(e) {
+      e.preventDefault();
+      const title = document.getElementById('newEventTitle').value.trim();
+      const category = document.getElementById('newEventCategory').value;
+      const date = document.getElementById('newEventDate').value;
+      const time = document.getElementById('newEventTime').value.trim();
+      const location = document.getElementById('newEventLocation').value.trim() || 'Hope School Gym';
+
+      if (!title || !date || !time) return;
+
+      const newEvt = {
+        id: 'custom-' + Date.now(),
+        date,
+        title,
+        time,
+        category,
+        location,
+        details: 'User added custom event.'
+      };
+
+      eventsData.push(newEvt);
+      saveEvents();
+      renderCalendarGrid();
+      document.getElementById('addEventForm').reset();
+      closeAddModal();
+    }
+
+    function exportICalendar() {
+      let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Hope Youth Basketball//Schedule 2026-2027//EN\nCALSCALE:GREGORIAN\nMETHOD:PUBLISH\n";
+
+      eventsData.forEach(evt => {
+        let dtStart = evt.date.replace(/-/g, '') + 'T120000Z';
+        let dtEnd = evt.date.replace(/-/g, '') + 'T130000Z';
+
+        icsContent += "BEGIN:VEVENT\n";
+        icsContent += `SUMMARY:Hope Basketball: ${evt.title}\n`;
+        icsContent += `DESCRIPTION:${evt.title} (${evt.time}) - Location: ${evt.location || 'Hope School Gym'}\n`;
+        icsContent += `LOCATION:${evt.location || 'Hope School Gym'}\n`;
+        icsContent += `DTSTART:${dtStart}\n`;
+        icsContent += `DTEND:${dtEnd}\n`;
+        icsContent += "END:VEVENT\n";
+      });
+
+      icsContent += "END:VCALENDAR";
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', 'Hope_Basketball_Schedule_2026_2027.ics');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportTeamSnapCSV() {
+      const today = '2026-11-10';
+      let filteredEvents = eventsData.filter(e => e.date >= today && e.category !== 'EVENT');
+
+      if (!selectedTeams.includes('ALL')) {
+        filteredEvents = filteredEvents.filter(e => {
+          const titleUpper = e.title.toUpperCase();
+          const detailsUpper = (e.details || '').toUpperCase();
+          return selectedTeams.some(team => {
+            const teamUpper = team.toUpperCase();
+            return titleUpper.includes(teamUpper) || detailsUpper.includes(teamUpper);
+          });
+        });
+      }
+
+      if (filteredEvents.length === 0) {
+        alert('No upcoming games/practices found for the selected team(s).');
+        return;
+      }
+
+      const headers = ['Date', 'Start Time', 'End Time', 'Subject', 'Location', 'Description', 'Home or Away'];
+      const rows = filteredEvents.map(evt => {
+        const [year, month, day] = evt.date.split('-');
+        const formattedDate = `${month}/${day}/${year}`;
+
+        let startTime = '';
+        let endTime = '';
+        if (evt.time.includes('-')) {
+          const parts = evt.time.split('-');
+          startTime = parts[0].trim();
+          endTime = parts[1].trim();
+        } else {
+          startTime = evt.time.trim();
+        }
+
+        const subject = evt.title.replace(/"/g, '""');
+        const location = (evt.location || 'Hope School Gym').replace(/"/g, '""');
+        const description = (evt.details || evt.title).replace(/"/g, '""');
+
+        let homeOrAway = 'Home';
+        if (evt.category === 'AWAY') homeOrAway = 'Away';
+
+        return `"${formattedDate}","${startTime}","${endTime}","${subject}","${location}","${description}","${homeOrAway}"`;
+      });
+
+      const csvContent = [headers.join(','), ...rows].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      const teamSuffix = selectedTeams.includes('ALL') ? 'All_Teams' : selectedTeams.join('_');
+      link.setAttribute('download', `TeamSnap_Import_Hope_Basketball_${teamSuffix}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    window.switchMonth = switchMonth;
+    window.setFilter = setFilter;
+    window.toggleTeamDropdown = toggleTeamDropdown;
+    window.handleTeamCheckboxChange = handleTeamCheckboxChange;
+    window.updateTeamDropdownLabel = updateTeamDropdownLabel;
+    window.openAddEventModal = openAddEventModal;
+    window.closeAddModal = closeAddModal;
+    window.handleAddNewEvent = handleAddNewEvent;
+    window.openEditModal = openEditModal;
+    window.closeModal = closeModal;
+    window.handleSaveEditedEvent = handleSaveEditedEvent;
+    window.handleDeleteCurrentEvent = handleDeleteCurrentEvent;
+    window.exportICalendar = exportICalendar;
+    window.exportTeamSnapCSV = exportTeamSnapCSV;
+    window.resetToDefaultEvents = resetToDefaultEvents;
+
+    window.onload = initCalendar;
+  </script>
+</body>
+</html>

@@ -687,12 +687,23 @@
       return `${eventItem.team}: ${title}`;
     }
 
-    function getEventStartMinutes(eventItem) {
-      const match = (eventItem.time || '').match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
-      if (!match) return -1;
+    function getEventTimeRange(eventItem) {
+      const match = (eventItem.time || '').match(/^\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?(?:\s*[-–—]\s*(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?)?/i);
+      if (!match) return { start: -1, end: -1 };
 
-      const hour = Number(match[1]) % 12 + (match[3].toUpperCase() === 'PM' ? 12 : 0);
-      return hour * 60 + Number(match[2] || 0);
+      const startPeriod = (match[3] || match[6] || 'PM').toUpperCase();
+      const endPeriod = (match[6] || match[3] || startPeriod).toUpperCase();
+      const toMinutes = (hour, minute, period) => (Number(hour) % 12 + (period === 'PM' ? 12 : 0)) * 60 + Number(minute || 0);
+      const start = toMinutes(match[1], match[2], startPeriod);
+      let end = match[4] ? toMinutes(match[4], match[5], endPeriod) : Infinity;
+      if (end < start) end += 24 * 60;
+      return { start, end };
+    }
+
+    function compareEventTimes(firstEvent, secondEvent) {
+      const firstTime = getEventTimeRange(firstEvent);
+      const secondTime = getEventTimeRange(secondEvent);
+      return firstTime.start - secondTime.start || firstTime.end - secondTime.end || 0;
     }
 
     function getCurrentMonthEvents(monthConfig) {
@@ -704,7 +715,7 @@
       }
 
       return monthEvents.sort((firstEvent, secondEvent) =>
-        firstEvent.date.localeCompare(secondEvent.date) || getEventStartMinutes(firstEvent) - getEventStartMinutes(secondEvent)
+        firstEvent.date.localeCompare(secondEvent.date) || compareEventTimes(firstEvent, secondEvent)
       );
     }
 
@@ -769,7 +780,9 @@
 
     function initCalendar() {
       loadEvents();
-      switchMonth(0);
+      const today = new Date();
+      const monthIndex = months.findIndex(month => month.year === today.getFullYear() && month.monthIdx === today.getMonth());
+      switchMonth(monthIndex === -1 ? 0 : monthIndex);
       updateFilterStyles();
 
       document.addEventListener('click', (e) => {
@@ -863,12 +876,15 @@
           dayEvents = dayEvents.filter(e => e.category === currentFilter);
         }
 
-        dayEvents.sort((firstEvent, secondEvent) => getEventStartMinutes(firstEvent) - getEventStartMinutes(secondEvent));
+        dayEvents.sort(compareEventTimes);
 
         const isClosedDay = dayEvents.some(e => e.category === 'EVENT' && (e.title.toLowerCase().includes('closed') || e.title.toLowerCase().includes('market prep') || e.title.toLowerCase().includes('concert') || e.title.toLowerCase().includes('panther paw')));
 
         const cell = document.createElement('div');
         cell.className = `calendar-day-cell p-2 flex flex-col justify-start transition ${isClosedDay ? 'bg-rose-950/20 border-rose-900/30' : 'bg-[#1d1d1d] hover:bg-[#242424]'}`;
+        cell.addEventListener('dblclick', event => {
+          if (!event.target.closest('[data-calendar-event]')) openAddEventModal(dateStr);
+        });
 
         let html = `
           <div class="flex items-center justify-between mb-1.5">
@@ -885,7 +901,7 @@
           else if (evt.category === 'EVENT') badgeStyle = 'bg-rose-950/90 text-rose-300 border-l-2 border-rose-500 hover:bg-rose-900';
 
           html += `
-            <div onclick="openEditModal('${evt.id}')" class="cursor-pointer text-[10px] font-semibold px-1.5 py-1 rounded ${badgeStyle} leading-tight transition truncate" title="Click to edit event">
+            <div data-calendar-event onclick="openEditModal('${evt.id}')" class="cursor-pointer text-[10px] font-semibold px-1.5 py-1 rounded ${badgeStyle} leading-tight transition truncate" title="Click to edit event">
               ${getEventDisplayTitle(evt)}
             </div>
           `;
@@ -966,7 +982,8 @@
       }
     }
 
-    function openAddEventModal() {
+    function openAddEventModal(date) {
+      if (date) document.getElementById('newEventDate').value = date;
       const modal = document.getElementById('addModal');
       const card = document.getElementById('addModalCard');
       modal.classList.remove('opacity-0', 'pointer-events-none');

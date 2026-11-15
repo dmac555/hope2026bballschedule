@@ -158,7 +158,7 @@
             time,
             category,
             location,
-            details: 'User added custom event.'
+            details: document.getElementById('newEventDetails').value.trim()
           };
           const { error } = await calendarDb.from(calendarTable).insert(newEvent);
           if (error) {

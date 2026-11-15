@@ -29,7 +29,14 @@
       (() => {
         const calendarDb = parent.hopeSupabase;
         const calendarTable = 'calendar_events';
+        const teamOptions = ['1/2A', 'Hope FB', 'Hope JVB', 'Hope JVG', 'Hope VB'];
         let refreshInProgress = false;
+
+        function teamScopedTitle(title, team) {
+          const previousTeam = teamOptions.find(option => title.toUpperCase().startsWith(option.toUpperCase() + ':'));
+          const cleanTitle = previousTeam ? title.slice(previousTeam.length + 1).trim() : title;
+          return team === 'ALL' ? cleanTitle : team + ': ' + cleanTitle;
+        }
 
         function presentError(message) {
           parent.document.getElementById('syncStatus').textContent = message;
@@ -90,8 +97,9 @@
         async function saveEditedEvent(event) {
           event.preventDefault();
           const id = document.getElementById('editEventId').value;
+          const team = document.getElementById('editEventTeam').value;
           const updated = {
-            title: document.getElementById('editEventTitle').value.trim(),
+            title: teamScopedTitle(document.getElementById('editEventTitle').value.trim(), team),
             category: document.getElementById('editEventCategory').value,
             date: document.getElementById('editEventDate').value,
             time: document.getElementById('editEventTime').value.trim(),
@@ -131,6 +139,7 @@
           event.preventDefault();
           const title = document.getElementById('newEventTitle').value.trim();
           const category = document.getElementById('newEventCategory').value;
+          const team = document.getElementById('newEventTeam').value;
           const date = document.getElementById('newEventDate').value;
           const time = document.getElementById('newEventTime').value.trim();
           const location = document.getElementById('newEventLocation').value.trim() || 'Hope School Gym';
@@ -139,7 +148,7 @@
           const newEvent = {
             id: 'custom-' + crypto.randomUUID(),
             date,
-            title,
+            title: teamScopedTitle(title, team),
             time,
             category,
             location,

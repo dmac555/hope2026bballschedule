@@ -140,15 +140,6 @@
         <button onclick="switchMonth(3)" class="month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap" data-month="3">Feb 2027</button>
       </div>
 
-      <div role="group" aria-label="Calendar view" class="flex items-center bg-[#121212]/80 p-1 rounded-lg border border-neutral-700/80">
-        <button id="calendarViewButton" type="button" onclick="setCalendarView('calendar')" aria-label="Calendar view" aria-pressed="true" title="Calendar view" class="p-2 rounded-md bg-violet-600 text-white shadow-sm">
-          <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
-        </button>
-        <button id="listViewButton" type="button" onclick="setCalendarView('list')" aria-label="List view" aria-pressed="false" title="List view" class="p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition">
-          <i class="fa-solid fa-list" aria-hidden="true"></i>
-        </button>
-      </div>
-
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div class="relative flex items-center gap-2">
           <button id="teamDropdownBtn" onclick="toggleTeamDropdown(event)" class="w-full sm:w-auto bg-[#121212] border border-neutral-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 flex items-center justify-between gap-2 cursor-pointer select-none">
@@ -185,7 +176,7 @@
           </div>
         </div>
 
-        <div class="flex items-center flex-wrap gap-1.5" id="categoryFilters">
+        <div class="flex items-center flex-wrap gap-1.5 sm:flex-1" id="categoryFilters">
           <button onclick="setFilter('ALL')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-filter="ALL">All Events</button>
           <button onclick="setFilter('HOME')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-violet-500/30 text-violet-300 bg-violet-950/30 hover:bg-violet-900/50" data-filter="HOME">
             <i class="fa-solid fa-house text-[10px] mr-1"></i> Home
@@ -199,6 +190,14 @@
           <button onclick="setFilter('EVENT')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-rose-500/30 text-rose-400 bg-rose-950/30 hover:bg-rose-900/50" data-filter="EVENT">
             <i class="fa-solid fa-school-flag text-[10px] mr-1"></i> Events
           </button>
+          <div role="group" aria-label="Calendar view" class="flex items-center bg-[#121212]/80 p-1 rounded-lg border border-neutral-700/80 ml-auto">
+          <button id="calendarViewButton" type="button" onclick="setCalendarView('calendar')" aria-label="Calendar view" aria-pressed="true" title="Calendar view" class="p-2 rounded-md bg-violet-600 text-white shadow-sm">
+            <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+          </button>
+          <button id="listViewButton" type="button" onclick="setCalendarView('list')" aria-label="List view" aria-pressed="false" title="List view" class="p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition">
+            <i class="fa-solid fa-list" aria-hidden="true"></i>
+          </button>
+        </div>
         </div>
       </div>
     </div>

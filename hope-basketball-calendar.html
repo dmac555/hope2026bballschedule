@@ -190,11 +190,11 @@
           <button onclick="setFilter('EVENT')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-rose-500/30 text-rose-400 bg-rose-950/30 hover:bg-rose-900/50" data-filter="EVENT">
             <i class="fa-solid fa-school-flag text-[10px] mr-1"></i> Events
           </button>
-          <div role="group" aria-label="Calendar view" class="flex items-center bg-[#121212]/80 p-1 rounded-lg border border-neutral-700/80 ml-auto">
-          <button id="calendarViewButton" type="button" onclick="setCalendarView('calendar')" aria-label="Calendar view" aria-pressed="true" title="Calendar view" class="p-2 rounded-md bg-violet-600 text-white shadow-sm">
+          <div role="group" aria-label="Calendar view" class="flex items-center bg-[#121212]/80 p-0.5 rounded-lg border border-neutral-700/80 ml-auto">
+          <button id="calendarViewButton" type="button" onclick="setCalendarView('calendar')" aria-label="Calendar view" aria-pressed="true" title="Calendar view" class="p-1 text-xs rounded-md bg-violet-600 text-white shadow-sm">
             <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
           </button>
-          <button id="listViewButton" type="button" onclick="setCalendarView('list')" aria-label="List view" aria-pressed="false" title="List view" class="p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition">
+          <button id="listViewButton" type="button" onclick="setCalendarView('list')" aria-label="List view" aria-pressed="false" title="List view" class="p-1 text-xs rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition">
             <i class="fa-solid fa-list" aria-hidden="true"></i>
           </button>
         </div>
@@ -827,11 +827,11 @@
       calendarButton.setAttribute('aria-pressed', String(!isListView));
       listButton.setAttribute('aria-pressed', String(isListView));
       calendarButton.className = isListView
-        ? 'p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition'
-        : 'p-2 rounded-md bg-violet-600 text-white shadow-sm';
+        ? 'p-1 text-xs rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition'
+        : 'p-1 text-xs rounded-md bg-violet-600 text-white shadow-sm';
       listButton.className = isListView
-        ? 'p-2 rounded-md bg-violet-600 text-white shadow-sm'
-        : 'p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition';
+        ? 'p-1 text-xs rounded-md bg-violet-600 text-white shadow-sm'
+        : 'p-1 text-xs rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition';
       renderCalendarGrid();
     }
 

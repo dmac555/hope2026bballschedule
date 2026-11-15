@@ -38,6 +38,12 @@
           return team === 'ALL' ? cleanTitle : team + ': ' + cleanTitle;
         }
 
+        function normalizeLocations(events) {
+          return (events || []).map(eventItem => eventItem.location === 'Liberty'
+            ? { ...eventItem, location: 'GMMS' }
+            : eventItem);
+        }
+
         function presentError(message) {
           parent.document.getElementById('syncStatus').textContent = message;
           const status = parent.document.getElementById('syncStatus');
@@ -63,9 +69,9 @@
               .select('id,date,title,time,category,location,details')
               .order('date', { ascending: true });
             if (readError) throw readError;
-            eventsData = seeded || [];
+            eventsData = normalizeLocations(seeded);
           } else {
-            eventsData = data;
+            eventsData = normalizeLocations(data);
           }
 
           renderCalendarGrid();
@@ -84,7 +90,7 @@
               .select('id,date,title,time,category,location,details')
               .order('date', { ascending: true });
             if (error) throw error;
-            eventsData = data || [];
+            eventsData = normalizeLocations(data);
             renderCalendarGrid();
           } catch (error) {
             presentError('Could not receive live schedule updates.');

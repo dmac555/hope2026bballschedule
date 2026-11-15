@@ -140,6 +140,15 @@
         <button onclick="switchMonth(3)" class="month-tab-btn px-4 py-2 rounded-lg text-xs font-bold transition whitespace-nowrap" data-month="3">Feb 2027</button>
       </div>
 
+      <div role="group" aria-label="Calendar view" class="flex items-center bg-[#121212]/80 p-1 rounded-lg border border-neutral-700/80">
+        <button id="calendarViewButton" type="button" onclick="setCalendarView('calendar')" aria-label="Calendar view" aria-pressed="true" title="Calendar view" class="p-2 rounded-md bg-violet-600 text-white shadow-sm">
+          <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+        </button>
+        <button id="listViewButton" type="button" onclick="setCalendarView('list')" aria-label="List view" aria-pressed="false" title="List view" class="p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition">
+          <i class="fa-solid fa-list" aria-hidden="true"></i>
+        </button>
+      </div>
+
       <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <div class="relative flex items-center gap-2">
           <button id="teamDropdownBtn" onclick="toggleTeamDropdown(event)" class="w-full sm:w-auto bg-[#121212] border border-neutral-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 font-semibold focus:outline-none focus:border-indigo-500 flex items-center justify-between gap-2 cursor-pointer select-none">
@@ -147,7 +156,7 @@
             <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200" id="teamDropdownChevron"></i>
           </button>
 
-          <div id="teamDropdownMenu" class="hidden absolute left-0 sm:left-auto sm:right-0 top-full mt-1.5 w-48 bg-[#1d1d1d] border border-neutral-700 rounded-xl shadow-2xl z-40 p-2 space-y-1">
+          <div id="teamDropdownMenu" class="hidden absolute left-0 top-full mt-1.5 w-48 bg-[#1d1d1d] border border-neutral-700 rounded-xl shadow-2xl z-40 p-2 space-y-1">
             <label class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-700/60 cursor-pointer text-xs font-semibold text-slate-200">
               <input type="checkbox" value="ALL" checked onchange="handleTeamCheckboxChange(this)" class="team-checkbox rounded border-slate-600 text-indigo-600 focus:ring-0 focus:ring-offset-0 bg-slate-900">
               <span>All Teams</span>
@@ -198,14 +207,14 @@
       <div class="bg-[#1d1d1d]/90 px-6 py-4 border-b border-neutral-700/60 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h2 id="calendarMonthTitle" class="text-2xl font-black text-white tracking-tight"></h2>
         <div class="flex flex-wrap items-center justify-start gap-x-4 gap-y-2 text-xs font-medium text-slate-400 no-print">
-          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Home (@ Hope)</span>
+          <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-violet-500"></span> Home (@ Hope)</span>
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Away</span>
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Practice</span>
           <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Event</span>
         </div>
       </div>
 
-      <div class="grid grid-cols-7 bg-[#111111]/90 border-b border-neutral-700/60 text-center text-xs font-bold text-slate-400 uppercase tracking-wider py-2.5">
+      <div id="calendarWeekdays" class="grid grid-cols-7 bg-[#111111]/90 border-b border-neutral-700/60 text-center text-xs font-bold text-slate-400 uppercase tracking-wider py-2.5">
         <div>Sun</div>
         <div>Mon</div>
         <div>Tue</div>
@@ -216,6 +225,24 @@
       </div>
 
       <div id="calendarGrid" class="grid grid-cols-7 auto-rows-fr gap-px bg-neutral-700/50 min-h-[580px]"></div>
+
+      <div id="calendarListView" class="hidden overflow-x-auto">
+        <table class="min-w-full text-left text-xs">
+          <thead class="bg-slate-900/90 text-neutral-200 uppercase">
+            <tr>
+              <th class="px-4 py-3 font-semibold whitespace-nowrap">Date</th>
+              <th class="px-4 py-3 font-semibold whitespace-nowrap">Time</th>
+              <th class="px-4 py-3 font-semibold whitespace-nowrap">Event</th>
+              <th class="px-4 py-3 font-semibold whitespace-nowrap">Category</th>
+              <th class="px-4 py-3 font-semibold whitespace-nowrap">Team</th>
+              <th class="px-4 py-3 font-semibold whitespace-nowrap">Location</th>
+              <th class="px-4 py-3 font-semibold min-w-48">Details</th>
+            </tr>
+          </thead>
+          <tbody id="calendarListBody" class="divide-y divide-slate-800"></tbody>
+        </table>
+        <p id="calendarListEmpty" class="hidden px-4 py-10 text-center text-neutral-300">No events match the current filters.</p>
+      </div>
     </div>
 
     <footer class="flex flex-col gap-4 pt-2">
@@ -502,6 +529,7 @@
     const TEAM_OPTIONS = ['1/2A', 'Hope FB', 'Hope JVB', 'Hope JVG', 'Hope VB'];
     let currentMonthIndex = 0;
     let currentFilter = 'ALL';
+    let currentView = 'calendar';
     const STORAGE_KEY = 'hope_basketball_events_v4';
 
     const months = [
@@ -653,6 +681,78 @@
       return `${eventItem.team}: ${title}`;
     }
 
+    function getEventStartMinutes(eventItem) {
+      const match = (eventItem.time || '').match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)/i);
+      if (!match) return -1;
+
+      const hour = Number(match[1]) % 12 + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+      return hour * 60 + Number(match[2] || 0);
+    }
+
+    function getCurrentMonthEvents(monthConfig) {
+      const monthPrefix = `${monthConfig.year}-${String(monthConfig.monthIdx + 1).padStart(2, '0')}`;
+      let monthEvents = filterEventsBySelectedTeams(eventsData.filter(eventItem => eventItem.date.startsWith(monthPrefix)));
+
+      if (currentFilter !== 'ALL') {
+        monthEvents = monthEvents.filter(eventItem => eventItem.category === currentFilter);
+      }
+
+      return monthEvents.sort((firstEvent, secondEvent) =>
+        firstEvent.date.localeCompare(secondEvent.date) || getEventStartMinutes(firstEvent) - getEventStartMinutes(secondEvent)
+      );
+    }
+
+    function renderCalendarList(monthConfig) {
+      const listView = document.getElementById('calendarListView');
+      const tableBody = document.getElementById('calendarListBody');
+      const emptyMessage = document.getElementById('calendarListEmpty');
+      const table = listView.querySelector('table');
+      const monthEvents = getCurrentMonthEvents(monthConfig);
+      const categoryLabels = { HOME: 'Home', AWAY: 'Away', PRACTICE: 'Practice', EVENT: 'Event' };
+
+      tableBody.replaceChildren();
+      table.classList.toggle('hidden', monthEvents.length === 0);
+      emptyMessage.classList.toggle('hidden', monthEvents.length > 0);
+
+      monthEvents.forEach(eventItem => {
+        const [year, month, day] = eventItem.date.split('-').map(Number);
+        const dateLabel = new Date(year, month - 1, day).toLocaleDateString('en-US', {
+          weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+        });
+        const row = document.createElement('tr');
+        row.className = 'cursor-pointer transition hover:bg-slate-800/80';
+        row.tabIndex = 0;
+        row.setAttribute('aria-label', `Edit ${getEventDisplayTitle(eventItem)}`);
+        row.addEventListener('click', () => openEditModal(eventItem.id));
+        row.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openEditModal(eventItem.id);
+          }
+        });
+
+        const team = getEventTeam(eventItem);
+        const values = [
+          dateLabel,
+          eventItem.time || '—',
+          getEventDisplayTitle(eventItem),
+          categoryLabels[eventItem.category] || eventItem.category,
+          team === 'ALL' ? 'All Teams' : team,
+          eventItem.location || '—',
+          eventItem.details || '—'
+        ];
+
+        values.forEach((value, index) => {
+          const cell = document.createElement('td');
+          cell.className = `px-4 py-3 align-top text-neutral-200 ${index < 2 ? 'whitespace-nowrap' : ''}`;
+          cell.textContent = value;
+          row.appendChild(cell);
+        });
+
+        tableBody.appendChild(row);
+      });
+    }
+
     function resetToDefaultEvents() {
       if (confirm('Are you sure you want to reset all events back to the original default schedule?')) {
         eventsData = [...defaultEventsData];
@@ -716,6 +816,26 @@
       });
     }
 
+    function setCalendarView(view) {
+      currentView = view === 'list' ? 'list' : 'calendar';
+      const isListView = currentView === 'list';
+      document.getElementById('calendarWeekdays').classList.toggle('hidden', isListView);
+      document.getElementById('calendarGrid').classList.toggle('hidden', isListView);
+      document.getElementById('calendarListView').classList.toggle('hidden', !isListView);
+
+      const calendarButton = document.getElementById('calendarViewButton');
+      const listButton = document.getElementById('listViewButton');
+      calendarButton.setAttribute('aria-pressed', String(!isListView));
+      listButton.setAttribute('aria-pressed', String(isListView));
+      calendarButton.className = isListView
+        ? 'p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition'
+        : 'p-2 rounded-md bg-violet-600 text-white shadow-sm';
+      listButton.className = isListView
+        ? 'p-2 rounded-md bg-violet-600 text-white shadow-sm'
+        : 'p-2 rounded-md text-neutral-300 hover:bg-slate-800 hover:text-white transition';
+      renderCalendarGrid();
+    }
+
     function renderCalendarGrid() {
       const monthConfig = months[currentMonthIndex];
       const teamLabel = getSelectedTeamLabel();
@@ -775,6 +895,8 @@
         emptyCell.className = 'bg-slate-800/40 p-2 opacity-30 min-h-[105px]';
         grid.appendChild(emptyCell);
       }
+
+      renderCalendarList(monthConfig);
     }
 
     function openEditModal(eventId) {

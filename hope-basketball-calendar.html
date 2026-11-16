@@ -85,6 +85,10 @@
       background-color: var(--gray-800) !important;
     }
 
+    .calendar-day-cell.adjacent-month {
+      background-color: var(--gray-900) !important;
+    }
+
     header p.text-slate-400 { color: #e5e5e5 !important; }
     #monthTabs .month-tab-btn:not(.bg-violet-600) { color: #e5e5e5 !important; }
     #monthTabs .month-tab-btn:not(.bg-violet-600):hover { color: #fff !important; }
@@ -861,14 +865,13 @@
       const grid = document.getElementById('calendarGrid');
       grid.innerHTML = '';
 
-      for (let i = 0; i < monthConfig.startDay; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.className = 'bg-slate-800/40 p-2 opacity-30 min-h-[105px]';
-        grid.appendChild(emptyCell);
-      }
-
-      for (let day = 1; day <= monthConfig.days; day++) {
-        const dateStr = `${monthConfig.year}-${String(monthConfig.monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const totalCells = monthConfig.startDay + monthConfig.days;
+      const trailingCells = (7 - (totalCells % 7)) % 7;
+      for (let day = 1 - monthConfig.startDay; day <= monthConfig.days + trailingCells; day++) {
+        const date = new Date(monthConfig.year, monthConfig.monthIdx, day);
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const isAdjacentMonth = date.getMonth() !== monthConfig.monthIdx;
+        const dayLabel = isAdjacentMonth ? `${date.toLocaleDateString('en-US', { month: 'short' })} ${date.getDate()}` : date.getDate();
         let dayEvents = filterEventsBySelectedTeams(eventsData.filter(eventItem => eventItem.date === dateStr));
 
         if (selectedCategories.length !== EVENT_CATEGORIES.length) {
@@ -881,13 +884,16 @@
 
         const cell = document.createElement('div');
         cell.className = `calendar-day-cell p-2 flex flex-col justify-start transition ${isClosedDay ? 'bg-rose-950/20 border-rose-900/30' : 'bg-[#1d1d1d] hover:bg-[#242424]'}`;
+        cell.classList.toggle('adjacent-month', isAdjacentMonth);
+        cell.dataset.date = dateStr;
         cell.addEventListener('dblclick', event => {
-          if (!event.target.closest('[data-calendar-event]')) openAddEventModal(dateStr);
+          const dateInput = document.getElementById('newEventDate');
+          if (!event.target.closest('[data-calendar-event]') && dateStr >= dateInput.min && dateStr <= dateInput.max) openAddEventModal(dateStr);
         });
 
         let html = `
           <div class="flex items-center justify-between mb-1.5">
-            <span class="text-xs font-extrabold ${isClosedDay ? 'text-rose-400' : 'text-slate-300'}">${day}</span>
+            <span class="text-xs font-extrabold ${isClosedDay ? 'text-rose-400' : 'text-slate-300'}">${dayLabel}</span>
           </div>
           <div class="flex flex-col gap-1 overflow-y-auto max-h-[95px]">
         `;
@@ -909,14 +915,6 @@
         html += `</div>`;
         cell.innerHTML = html;
         grid.appendChild(cell);
-      }
-
-      const totalCells = monthConfig.startDay + monthConfig.days;
-      const trailingCells = (7 - (totalCells % 7)) % 7;
-      for (let i = 0; i < trailingCells; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.className = 'bg-slate-800/40 p-2 opacity-30 min-h-[105px]';
-        grid.appendChild(emptyCell);
       }
 
       renderCalendarList(monthConfig);

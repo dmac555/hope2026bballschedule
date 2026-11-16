@@ -179,19 +179,21 @@
         </div>
 
         <div class="flex items-center flex-wrap gap-1.5 sm:flex-1" id="categoryFilters">
-          <button onclick="setFilter('ALL')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-filter="ALL">All Events</button>
-          <button onclick="setFilter('HOME')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-violet-500/30 text-violet-300 bg-violet-950/30 hover:bg-violet-900/50" data-filter="HOME">
-            <i class="fa-solid fa-house text-[10px] mr-1"></i> Home
-          </button>
-          <button onclick="setFilter('AWAY')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-blue-500/30 text-blue-400 bg-blue-950/30 hover:bg-blue-900/50" data-filter="AWAY">
-            <i class="fa-solid fa-plane-departure text-[10px] mr-1"></i> Away
-          </button>
-          <button onclick="setFilter('PRACTICE')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-amber-500/30 text-amber-400 bg-amber-950/30 hover:bg-amber-900/50" data-filter="PRACTICE">
-            <i class="fa-solid fa-stopwatch text-[10px] mr-1"></i> Practice
-          </button>
-          <button onclick="setFilter('EVENT')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold transition border border-rose-500/30 text-rose-400 bg-rose-950/30 hover:bg-rose-900/50" data-filter="EVENT">
-            <i class="fa-solid fa-school-flag text-[10px] mr-1"></i> Events
-          </button>
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-slate-500 text-white bg-slate-700 cursor-pointer">
+            <input type="checkbox" class="category-checkbox accent-violet-500" value="ALL" onchange="setFilter(this.value, this.checked)" checked> All Events
+          </label>
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-violet-500/30 text-violet-300 bg-violet-950/30 cursor-pointer">
+            <input type="checkbox" class="category-checkbox accent-violet-500" value="HOME" onchange="setFilter(this.value, this.checked)" checked> Home
+          </label>
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-blue-500/30 text-blue-400 bg-blue-950/30 cursor-pointer">
+            <input type="checkbox" class="category-checkbox accent-blue-500" value="AWAY" onchange="setFilter(this.value, this.checked)" checked> Away
+          </label>
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-amber-500/30 text-amber-400 bg-amber-950/30 cursor-pointer">
+            <input type="checkbox" class="category-checkbox accent-amber-500" value="PRACTICE" onchange="setFilter(this.value, this.checked)" checked> Practice
+          </label>
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-rose-500/30 text-rose-400 bg-rose-950/30 cursor-pointer">
+            <input type="checkbox" class="category-checkbox accent-rose-500" value="EVENT" onchange="setFilter(this.value, this.checked)" checked> Events
+          </label>
           <div role="group" aria-label="Calendar view" class="flex items-center bg-[#121212]/80 p-0.5 rounded-lg border border-neutral-700/80 ml-auto">
           <button id="calendarViewButton" type="button" onclick="setCalendarView('calendar')" aria-label="Calendar view" aria-pressed="true" title="Calendar view" class="w-11 h-6 p-1 text-xs rounded-md flex items-center justify-center bg-violet-600 text-white shadow-sm">
             <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
@@ -534,7 +536,8 @@
     let selectedTeams = ['ALL'];
     const TEAM_OPTIONS = ['1/2A', 'Hope FB', 'Hope JVB', 'Hope JVG', 'Hope VB'];
     let currentMonthIndex = 0;
-    let currentFilter = 'ALL';
+    const EVENT_CATEGORIES = ['HOME', 'AWAY', 'PRACTICE', 'EVENT'];
+    let selectedCategories = [...EVENT_CATEGORIES];
     let currentView = 'calendar';
     const STORAGE_KEY = 'hope_basketball_events_v4';
 
@@ -710,8 +713,8 @@
       const monthPrefix = `${monthConfig.year}-${String(monthConfig.monthIdx + 1).padStart(2, '0')}`;
       let monthEvents = filterEventsBySelectedTeams(eventsData.filter(eventItem => eventItem.date.startsWith(monthPrefix)));
 
-      if (currentFilter !== 'ALL') {
-        monthEvents = monthEvents.filter(eventItem => eventItem.category === currentFilter);
+      if (selectedCategories.length !== EVENT_CATEGORIES.length) {
+        monthEvents = monthEvents.filter(eventItem => selectedCategories.includes(eventItem.category));
       }
 
       return monthEvents.sort((firstEvent, secondEvent) =>
@@ -810,28 +813,24 @@
       renderCalendarGrid();
     }
 
-    function setFilter(filter) {
-      currentFilter = filter;
+    function setFilter(filter, checked) {
+      if (filter === 'ALL') {
+        selectedCategories = checked ? [...EVENT_CATEGORIES] : [];
+      } else if (checked) {
+        if (!selectedCategories.includes(filter)) selectedCategories.push(filter);
+      } else {
+        selectedCategories = selectedCategories.filter(category => category !== filter);
+      }
       updateFilterStyles();
       renderCalendarGrid();
     }
 
     function updateFilterStyles() {
-      document.querySelectorAll('.filter-btn').forEach(btn => {
-        const type = btn.dataset.filter;
-        if (type === currentFilter) {
-          if (type === 'ALL') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-700 text-white border border-slate-500 shadow-sm';
-          if (type === 'HOME') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white border border-violet-400 shadow-sm';
-          if (type === 'AWAY') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white border border-blue-400 shadow-sm';
-          if (type === 'PRACTICE') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 text-white border border-amber-400 shadow-sm';
-          if (type === 'EVENT') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-rose-600 text-white border border-rose-400 shadow-sm';
-        } else {
-          if (type === 'ALL') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-400 bg-slate-900/50 hover:bg-slate-800 hover:text-white';
-          if (type === 'HOME') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-violet-300 bg-violet-950/30 hover:bg-violet-900/50 border border-violet-500/20';
-          if (type === 'AWAY') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-400 bg-blue-950/30 hover:bg-blue-900/50 border border-blue-500/20';
-          if (type === 'PRACTICE') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-amber-400 bg-amber-950/30 hover:bg-amber-900/50 border border-amber-500/20';
-          if (type === 'EVENT') btn.className = 'filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-400 bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/20';
-        }
+      document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+        checkbox.checked = checkbox.value === 'ALL'
+          ? selectedCategories.length === EVENT_CATEGORIES.length
+          : selectedCategories.includes(checkbox.value);
+        checkbox.indeterminate = checkbox.value === 'ALL' && selectedCategories.length > 0 && selectedCategories.length < EVENT_CATEGORIES.length;
       });
     }
 
@@ -872,8 +871,8 @@
         const dateStr = `${monthConfig.year}-${String(monthConfig.monthIdx + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         let dayEvents = filterEventsBySelectedTeams(eventsData.filter(eventItem => eventItem.date === dateStr));
 
-        if (currentFilter !== 'ALL') {
-          dayEvents = dayEvents.filter(e => e.category === currentFilter);
+        if (selectedCategories.length !== EVENT_CATEGORIES.length) {
+          dayEvents = dayEvents.filter(eventItem => selectedCategories.includes(eventItem.category));
         }
 
         dayEvents.sort(compareEventTimes);

@@ -681,17 +681,26 @@
     function getEditableEventTitle(eventItem) {
       const team = getEventTeam(eventItem);
       const prefix = `${team}:`;
-      return team !== 'ALL' && eventItem.title.toUpperCase().startsWith(prefix.toUpperCase())
+      const title = team !== 'ALL' && eventItem.title.toUpperCase().startsWith(prefix.toUpperCase())
         ? eventItem.title.slice(prefix.length).trim()
         : eventItem.title;
+      return removeDecemberPracticeAsterisk(eventItem, title);
     }
 
     function getEventDisplayTitle(eventItem) {
-      if (!eventItem.team || eventItem.team === 'ALL') return eventItem.title;
+      const cleanTitle = removeDecemberPracticeAsterisk(eventItem, eventItem.title);
+      if (!eventItem.team || eventItem.team === 'ALL') return cleanTitle;
 
-      const previousTeam = TEAM_OPTIONS.find(team => eventItem.title.toUpperCase().startsWith(`${team.toUpperCase()}:`));
-      const title = previousTeam ? eventItem.title.slice(previousTeam.length + 1).trim() : eventItem.title;
+      const previousTeam = TEAM_OPTIONS.find(team => cleanTitle.toUpperCase().startsWith(`${team.toUpperCase()}:`));
+      const title = previousTeam ? cleanTitle.slice(previousTeam.length + 1).trim() : cleanTitle;
       return `${eventItem.team}: ${title}`;
+    }
+
+    function removeDecemberPracticeAsterisk(eventItem, title) {
+      if (eventItem.category === 'PRACTICE' && eventItem.date.slice(5, 7) === '12') {
+        return title.replace(/\s*\*+\s*$/, '').trim();
+      }
+      return title;
     }
 
     function getEventTimeRange(eventItem) {

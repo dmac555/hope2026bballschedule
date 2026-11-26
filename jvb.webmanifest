@@ -1,0 +1,13 @@
+{
+  "id": "./jvb.html",
+  "name": "Hope JVB Team",
+  "short_name": "Hope JVB",
+  "start_url": "./jvb-login.html",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "./apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "./hope-rec-logo.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

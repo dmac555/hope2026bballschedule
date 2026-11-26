@@ -22,6 +22,8 @@ let availabilityVersion = 0;
 let availabilityEventId = null;
 let myAvailability = null;
 let selectedMessage = null;
+let pushRegistration = null;
+let pushPublicKey = null;
 
 function showStatus(id, message) {
   const element = document.getElementById(id);
@@ -235,6 +237,109 @@ function selectedParticipant() {
   return account.is_coach ? document.getElementById('conversationSelect').value : account.account_id;
 }
 
+function updateNotificationButton(enabled) {
+  const button = document.getElementById('notificationToggle');
+  const label = enabled ? 'Disable notifications' : 'Enable notifications';
+  button.setAttribute('aria-pressed', String(enabled));
+  button.setAttribute('aria-label', label);
+  button.title = label;
+}
+
+async function getPushPublicKey() {
+  if (pushPublicKey) return pushPublicKey;
+  const { data, error } = await client.functions.invoke('hope-jvb-push', { body: { action: 'public-key' } });
+  if (error || !data?.publicKey) throw error || new Error('Push key unavailable');
+  pushPublicKey = data.publicKey;
+  return pushPublicKey;
+}
+
+function decodePushKey(key) {
+  const padded = (key + '='.repeat((4 - key.length % 4) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(padded), character => character.charCodeAt(0));
+}
+
+async function initializeNotifications() {
+  const button = document.getElementById('notificationToggle');
+  try {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return;
+    pushRegistration = await navigator.serviceWorker.register('./jvb-push-sw.js', { scope: './jvb' });
+    await navigator.serviceWorker.ready;
+    const subscription = await pushRegistration.pushManager.getSubscription();
+    if (subscription) {
+      const { error } = await client.rpc('hope_jvb_register_push', { p_subscription: subscription.toJSON() });
+      if (error) throw error;
+      updateNotificationButton(true);
+    }
+    await getPushPublicKey();
+  } catch (error) {
+    console.error('JVB notification setup failed:', error);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function disableNotifications() {
+  if (!pushRegistration) return;
+  const subscription = await pushRegistration.pushManager.getSubscription();
+  if (subscription) {
+    const endpoint = subscription.endpoint;
+    if (!await subscription.unsubscribe()) throw new Error('Unable to unsubscribe');
+    const { error } = await client.rpc('hope_jvb_unregister_push', { p_endpoint: endpoint });
+    if (error) console.error('JVB notification cleanup failed:', error);
+  }
+  pushRegistration.active?.postMessage({ type: 'clear-unread' });
+  updateNotificationButton(false);
+}
+
+async function toggleNotifications() {
+  const button = document.getElementById('notificationToggle');
+  showStatus('notificationStatus', '');
+  if (!pushRegistration || !('Notification' in window)) {
+    showStatus('notificationStatus', 'Add JVB to your Home Screen and open it there to enable notifications.');
+    return;
+  }
+  button.disabled = true;
+  try {
+    if (button.getAttribute('aria-pressed') === 'true') {
+      await disableNotifications();
+      showStatus('notificationStatus', 'Notifications are off.');
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      showStatus('notificationStatus', 'Notifications are not allowed in your device settings.');
+      return;
+    }
+    const key = await getPushPublicKey();
+    const subscription = await pushRegistration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: decodePushKey(key) });
+    const { error } = await client.rpc('hope_jvb_register_push', { p_subscription: subscription.toJSON() });
+    if (error) {
+      await subscription.unsubscribe();
+      throw error;
+    }
+    updateNotificationButton(true);
+    showStatus('notificationStatus', 'Notifications are on.');
+  } catch (error) {
+    console.error('JVB notification change failed:', error);
+    showStatus('notificationStatus', 'Unable to change notifications. Please try again.');
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function markChatRead(channel, participantId) {
+  pushRegistration?.active?.postMessage({ type: 'read-chat', channel, participantId });
+}
+
+function openNotificationChat(channel, participantId) {
+  if (channel !== 'team' && channel !== 'direct') return;
+  if (channel === 'direct' && account.is_coach && participantId) {
+    const select = document.getElementById('conversationSelect');
+    if (Array.from(select.options).some(option => option.value === participantId)) select.value = participantId;
+  }
+  setView(channel);
+}
+
 function updateChatRecipient() {
   const recipient = document.getElementById('chatRecipient');
   recipient.hidden = activeView !== 'direct';
@@ -350,6 +455,7 @@ async function renderMessages() {
     const { data, error } = await query.order('created_at', { ascending: false }).limit(500);
     if (error) throw error;
     if (version !== requestVersion) return;
+    markChatRead(channel, participant);
     const messages = (data || []).slice().reverse();
     const messagesKey = JSON.stringify([channel, participant, messages.map(message => [message.id, message.body])]);
     if (messagesKey === renderedMessagesKey) {
@@ -453,6 +559,10 @@ async function initializeTeam() {
   document.getElementById('notAttendingButton').addEventListener('click', () => setAvailability(false));
   document.getElementById('eventDialog').addEventListener('close', () => { availabilityVersion++; availabilityEventId = null; });
   document.getElementById('messageForm').addEventListener('submit', sendMessage);
+  document.getElementById('notificationToggle').addEventListener('click', toggleNotifications);
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', event => {
+    if (event.data?.type === 'open-chat') openNotificationChat(event.data.channel, event.data.participantId);
+  });
   document.getElementById('editMessage').addEventListener('click', () => {
     hideMessageMenu();
     if (!selectedMessage) return;
@@ -468,6 +578,11 @@ async function initializeTeam() {
   document.addEventListener('keydown', event => { if (event.key === 'Escape') hideMessageMenu(); });
   document.getElementById('messages').addEventListener('scroll', hideMessageMenu);
   document.getElementById('signOut').addEventListener('click', async () => {
+    try { await disableNotifications(); } catch (error) {
+      console.error('JVB notification sign-out cleanup failed:', error);
+      showStatus('notificationStatus', 'Unable to turn off notifications. Please try signing out again.');
+      return;
+    }
     window.clearInterval(refreshTimer);
     await client.auth.signOut();
     window.location.replace('./jvb-login.html');
@@ -478,6 +593,15 @@ async function initializeTeam() {
   document.getElementById('loadingStatus').hidden = true;
   document.getElementById('app').hidden = false;
   await renderCalendar();
+  initializeNotifications();
+  const notificationUrl = new URL(window.location.href);
+  const notificationChat = notificationUrl.searchParams.get('chat');
+  if (notificationChat === 'team' || notificationChat === 'direct') {
+    openNotificationChat(notificationChat, notificationUrl.searchParams.get('participant'));
+    notificationUrl.searchParams.delete('chat');
+    notificationUrl.searchParams.delete('participant');
+    window.history.replaceState(null, '', notificationUrl);
+  }
   refreshTimer = window.setInterval(() => { if (!document.hidden && activeView !== 'calendar') renderMessages(); }, 8000);
 }
 

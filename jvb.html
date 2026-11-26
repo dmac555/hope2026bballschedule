@@ -7,6 +7,7 @@
   <title>Hope JVB</title>
   <link rel="icon" type="image/svg+xml" href="./hope-rec-logo.svg">
   <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <link rel="manifest" href="./jvb.webmanifest">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <link rel="stylesheet" href="./jvb.css">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,8 +20,9 @@
         <img class="brand-icon" src="./hope-rec-logo.svg" alt="">
         <div><p class="eyebrow">Hope Rec. Basketball</p><h1>JVB Team</h1></div>
       </div>
-      <div class="account"><span id="accountName"></span><button id="signOut" class="quiet-button" type="button">Sign out</button></div>
+      <div class="account"><span id="accountName"></span><div class="account-actions"><button id="notificationToggle" class="icon-button" type="button" title="Enable notifications" aria-label="Enable notifications" aria-pressed="false" disabled><i class="fa-regular fa-bell" aria-hidden="true"></i></button><button id="signOut" class="quiet-button" type="button">Sign out</button></div></div>
     </header>
+    <p id="notificationStatus" class="status" role="status" hidden></p>
     <nav class="tabs" aria-label="JVB sections">
       <button type="button" class="tab active" data-view="calendar" aria-pressed="true"><i class="fa-regular fa-calendar" aria-hidden="true"></i> Calendar</button>
       <button type="button" class="tab" data-view="team" aria-pressed="false"><i class="fa-regular fa-comments" aria-hidden="true"></i> Team Chat</button>

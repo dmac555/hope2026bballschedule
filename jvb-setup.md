@@ -30,6 +30,12 @@ where login_name = 'coach' and is_coach;
 
 The coach signs in using `Coach` as the last name and the separate coach code. Players sign in with their last name and the player code.
 
+## Chat notifications
+
+Deploy `supabase/functions/hope-jvb-push/index.ts` as the `hope-jvb-push` Edge Function, with legacy gateway JWT verification disabled. The function checks JVB sign-in for subscription setup and verifies a private database webhook token for delivery. Run `jvb-push-setup.sql` in the same project after deploying the function. The migration creates JVB-only subscription storage, service-only key functions, and an insert trigger; it does not change the main calendar. The private Web Push key and webhook token remain in the database, not in the repository.
+
+On iPhone or iPad, add the JVB page to the Home Screen, open it as a web app on iOS or iPadOS 16.4 or newer, and tap the bell to allow notifications. Alerts say only "New JVB message". The Home Screen badge clears for a conversation when that chat is viewed. Turning notifications off or signing out unsubscribes that device.
+
 ## Privacy limitations
 
 The requested shared four-digit player code is easy to guess. Anyone who knows it and a player's last name can impersonate that player and read that player's individual chat. Use individual, stronger codes for meaningful identity protection.

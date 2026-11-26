@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <title>Hope JVB Sign In</title>
+  <link rel="icon" type="image/svg+xml" href="./hope-rec-logo.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <link rel="stylesheet" href="./jvb.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./jvb.js"></script>
+</head>
+<body data-page="login">
+  <main class="login-page">
+    <div class="login-content">
+      <img class="brand-icon" src="./hope-rec-logo.svg" alt="">
+      <p class="eyebrow">Hope Rec. Basketball</p>
+      <h1>JVB Team</h1>
+      <form id="loginForm" class="login-form">
+        <label for="lastName">Last name</label>
+        <input id="lastName" name="lastName" autocomplete="username" autocapitalize="words" required>
+        <label for="accountCode">Account code</label>
+        <input id="accountCode" name="accountCode" type="password" autocomplete="current-password" required>
+        <p id="loginError" class="status error" role="alert" hidden></p>
+        <button id="loginButton" class="primary-button" type="submit">Sign in</button>
+      </form>
+    </div>
+  </main>
+</body>
+</html>

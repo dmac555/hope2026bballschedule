@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111111">
+  <title>Hope JVB</title>
+  <link rel="icon" type="image/svg+xml" href="./hope-rec-logo.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="./jvb.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./jvb.js"></script>
+</head>
+<body data-page="team">
+  <main id="app" class="app" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-icon" src="./hope-rec-logo.svg" alt="">
+        <div><p class="eyebrow">Hope Rec. Basketball</p><h1>JVB Team</h1></div>
+      </div>
+      <div class="account"><span id="accountName"></span><button id="signOut" class="quiet-button" type="button">Sign out</button></div>
+    </header>
+    <nav class="tabs" aria-label="JVB sections">
+      <button type="button" class="tab active" data-view="calendar" aria-pressed="true"><i class="fa-regular fa-calendar" aria-hidden="true"></i> Calendar</button>
+      <button type="button" class="tab" data-view="team" aria-pressed="false"><i class="fa-regular fa-comments" aria-hidden="true"></i> Team Chat</button>
+      <button type="button" class="tab" data-view="direct" aria-pressed="false"><i class="fa-regular fa-comment" aria-hidden="true"></i> Individual Chat</button>
+    </nav>
+    <p id="appError" class="status error" role="alert" hidden></p>
+    <section id="calendarView" class="view" aria-labelledby="monthTitle">
+      <div class="section-heading">
+        <div><p class="eyebrow">Schedule</p><h2 id="monthTitle"></h2></div>
+        <div class="month-controls">
+          <button type="button" id="previousMonth" class="icon-button" aria-label="Previous month" title="Previous month"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+          <button type="button" id="nextMonth" class="icon-button" aria-label="Next month" title="Next month"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <p id="calendarStatus" class="status" role="status" hidden></p>
+      <div class="calendar-wrap">
+        <div class="weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </div>
+    </section>
+    <section id="chatView" class="view" aria-labelledby="chatTitle" hidden>
+      <div class="section-heading">
+        <div><p class="eyebrow">Messages</p><h2 id="chatTitle">Team Chat</h2><p id="chatRecipient" class="status" hidden></p></div>
+        <div id="conversationControl" class="conversation-control" hidden>
+          <label for="conversationSelect">Player</label>
+          <select id="conversationSelect"></select>
+        </div>
+      </div>
+      <div class="chat-panel">
+        <div id="messages" class="messages" role="log" aria-label="Messages" aria-live="polite"></div>
+        <p id="chatStatus" class="status" role="status" hidden></p>
+        <form id="messageForm" class="message-form">
+          <label class="sr-only" for="messageInput">Message</label>
+          <input id="messageInput" autocomplete="off" maxlength="2000" placeholder="Write a message" required>
+          <button id="sendMessage" class="primary-button" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send</button>
+        </form>
+      </div>
+    </section>
+  </main>
+  <p id="loadingStatus" class="loading" role="status">Loading…</p>
+  <dialog id="eventDialog">
+    <form method="dialog" class="dialog-header"><h2 id="eventTitle"></h2><button class="icon-button" aria-label="Close event" title="Close event"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form>
+    <dl id="eventDetails" class="event-details"></dl>
+  </dialog>
+</body>
+</html>

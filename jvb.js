@@ -18,6 +18,9 @@ let monthIndex = 0;
 let refreshTimer;
 let requestVersion = 0;
 let renderedMessagesKey = '';
+let availabilityVersion = 0;
+let availabilityEventId = null;
+let myAvailability = null;
 
 function showStatus(id, message) {
   const element = document.getElementById(id);
@@ -86,6 +89,52 @@ function displayTitle(eventItem) {
     : eventItem.title;
 }
 
+function setAvailabilityBusy(busy) {
+  document.getElementById('attendingButton').disabled = busy || account.is_coach;
+  document.getElementById('notAttendingButton').disabled = busy || account.is_coach;
+}
+
+async function loadAvailability(version, eventId) {
+  try {
+    const { data, error } = await client.rpc('hope_jvb_get_availability', { p_event_id: eventId });
+    if (error) throw error;
+    if (version !== availabilityVersion) return;
+    if (!data || !data[0]) throw new Error('Missing availability totals');
+    const totals = data[0];
+    myAvailability = totals.my_attending;
+    document.getElementById('attendingCount').textContent = totals.attending_count;
+    document.getElementById('notAttendingCount').textContent = totals.not_attending_count;
+    document.getElementById('attendingButton').setAttribute('aria-pressed', String(myAvailability === true));
+    document.getElementById('notAttendingButton').setAttribute('aria-pressed', String(myAvailability === false));
+    showStatus('availabilityStatus', account.is_coach ? 'Player responses only.' : '');
+    setAvailabilityBusy(false);
+  } catch (error) {
+    console.error('JVB availability failed:', error);
+    if (version === availabilityVersion) {
+      showStatus('availabilityStatus', 'Unable to load availability. Close and reopen this event to retry.');
+      setAvailabilityBusy(true);
+    }
+  }
+}
+
+async function setAvailability(attending) {
+  const version = availabilityVersion;
+  const eventId = availabilityEventId;
+  setAvailabilityBusy(true);
+  showStatus('availabilityStatus', 'Saving...');
+  try {
+    const { error } = await client.rpc('hope_jvb_set_availability', { p_event_id: eventId, p_attending: myAvailability === attending ? null : attending });
+    if (error) throw error;
+    if (version === availabilityVersion) await loadAvailability(version, eventId);
+  } catch (error) {
+    console.error('JVB availability update failed:', error);
+    if (version === availabilityVersion) {
+      showStatus('availabilityStatus', 'Unable to save availability. Please try again.');
+      setAvailabilityBusy(false);
+    }
+  }
+}
+
 function showEvent(eventItem) {
   document.getElementById('eventTitle').textContent = displayTitle(eventItem);
   const details = document.getElementById('eventDetails');
@@ -107,7 +156,17 @@ function showEvent(eventItem) {
     description.textContent = value;
     details.append(term, description);
   });
+  availabilityEventId = eventItem.id;
+  const version = ++availabilityVersion;
+  myAvailability = null;
+  document.getElementById('attendingCount').textContent = '--';
+  document.getElementById('notAttendingCount').textContent = '--';
+  document.getElementById('attendingButton').setAttribute('aria-pressed', 'false');
+  document.getElementById('notAttendingButton').setAttribute('aria-pressed', 'false');
+  setAvailabilityBusy(true);
+  showStatus('availabilityStatus', 'Loading availability...');
   document.getElementById('eventDialog').showModal();
+  loadAvailability(version, eventItem.id);
 }
 
 async function renderCalendar() {
@@ -296,6 +355,9 @@ async function initializeTeam() {
   document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
   document.getElementById('previousMonth').addEventListener('click', () => { if (monthIndex > 0) { monthIndex--; renderCalendar(); } });
   document.getElementById('nextMonth').addEventListener('click', () => { if (monthIndex < SCHEDULE_MONTHS.length - 1) { monthIndex++; renderCalendar(); } });
+  document.getElementById('attendingButton').addEventListener('click', () => setAvailability(true));
+  document.getElementById('notAttendingButton').addEventListener('click', () => setAvailability(false));
+  document.getElementById('eventDialog').addEventListener('close', () => { availabilityVersion++; availabilityEventId = null; });
   document.getElementById('messageForm').addEventListener('submit', sendMessage);
   document.getElementById('signOut').addEventListener('click', async () => {
     window.clearInterval(refreshTimer);

@@ -110,4 +110,72 @@ grant execute on function public.hope_jvb_sign_in(text, text) to authenticated;
 grant execute on function public.hope_jvb_session() to authenticated;
 grant execute on function public.hope_jvb_roster() to authenticated;
 
+create table if not exists public.hope_jvb_availability (
+  event_id text not null,
+  account_id uuid not null references public.hope_jvb_accounts(id) on delete cascade,
+  attending boolean not null,
+  updated_at timestamptz not null default now(),
+  primary key (event_id, account_id)
+);
+
+alter table public.hope_jvb_availability enable row level security;
+revoke all on public.hope_jvb_availability from public, anon, authenticated;
+
+create or replace function public.hope_jvb_get_availability(p_event_id text)
+returns table (attending_count bigint, not_attending_count bigint, my_attending boolean)
+language plpgsql stable security definer set search_path = public, pg_temp
+as $$
+declare
+  current_account uuid := public.hope_jvb_account_id();
+begin
+  if current_account is null then
+    raise exception 'JVB sign-in required' using errcode = '42501';
+  end if;
+  if not exists (
+    select 1 from public.calendar_events event_item
+    where event_item.id = p_event_id
+      and upper(coalesce(event_item.title, '') || ' ' || coalesce(event_item.details, '')) like '%HOPE JVB%'
+  ) then
+    raise exception 'JVB event not found' using errcode = 'P0002';
+  end if;
+  return query
+    select count(*) filter (where response.attending),
+      count(*) filter (where not response.attending),
+      bool_or(response.attending) filter (where response.account_id = current_account)
+    from public.hope_jvb_availability response
+    where response.event_id = p_event_id;
+end;
+$$;
+
+create or replace function public.hope_jvb_set_availability(p_event_id text, p_attending boolean)
+returns void language plpgsql security definer set search_path = public, pg_temp
+as $$
+declare
+  current_account uuid := public.hope_jvb_account_id();
+begin
+  if not exists (select 1 from public.hope_jvb_accounts where id = current_account and not is_coach) then
+    raise exception 'Player sign-in required' using errcode = '42501';
+  end if;
+  if not exists (
+    select 1 from public.calendar_events event_item
+    where event_item.id = p_event_id
+      and upper(coalesce(event_item.title, '') || ' ' || coalesce(event_item.details, '')) like '%HOPE JVB%'
+  ) then
+    raise exception 'JVB event not found' using errcode = 'P0002';
+  end if;
+  if p_attending is null then
+    delete from public.hope_jvb_availability where event_id = p_event_id and account_id = current_account;
+  else
+    insert into public.hope_jvb_availability (event_id, account_id, attending)
+    values (p_event_id, current_account, p_attending)
+    on conflict (event_id, account_id) do update set attending = excluded.attending, updated_at = now();
+  end if;
+end;
+$$;
+
+revoke all on function public.hope_jvb_get_availability(text) from public, anon;
+revoke all on function public.hope_jvb_set_availability(text, boolean) from public, anon;
+grant execute on function public.hope_jvb_get_availability(text) to authenticated;
+grant execute on function public.hope_jvb_set_availability(text, boolean) to authenticated;
+
 commit;

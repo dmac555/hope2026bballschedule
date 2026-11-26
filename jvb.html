@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#111111">
   <title>Hope JVB</title>
   <link rel="icon" type="image/svg+xml" href="./hope-rec-logo.svg">
@@ -35,6 +35,11 @@
           <button type="button" id="nextMonth" class="icon-button" aria-label="Next month" title="Next month"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
         </div>
       </div>
+      <ul class="calendar-legend" aria-label="Calendar key">
+        <li><span class="legend-swatch home" aria-hidden="true"></span>Home game</li>
+        <li><span class="legend-swatch away" aria-hidden="true"></span>Away game</li>
+        <li><span class="legend-swatch practice" aria-hidden="true"></span>Practice</li>
+      </ul>
       <p id="calendarStatus" class="status" role="status" hidden></p>
       <div class="calendar-wrap">
         <div class="weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
@@ -64,6 +69,15 @@
   <dialog id="eventDialog">
     <form method="dialog" class="dialog-header"><h2 id="eventTitle"></h2><button class="icon-button" aria-label="Close event" title="Close event"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form>
     <dl id="eventDetails" class="event-details"></dl>
+    <section class="availability" aria-labelledby="availabilityLabel">
+      <div class="availability-controls">
+        <h3 id="availabilityLabel">Availability</h3>
+        <button id="attendingButton" class="icon-button availability-button attending" type="button" aria-label="Attending" title="Attending" aria-pressed="false" disabled><i class="fa-solid fa-check" aria-hidden="true"></i></button>
+        <button id="notAttendingButton" class="icon-button availability-button not-attending" type="button" aria-label="Not attending" title="Not attending" aria-pressed="false" disabled><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+      </div>
+      <div class="availability-totals" aria-live="polite"><span><strong id="attendingCount">--</strong> Attending</span><span><strong id="notAttendingCount">--</strong> Not attending</span></div>
+      <p id="availabilityStatus" class="status" role="status" hidden></p>
+    </section>
   </dialog>
 </body>
 </html>

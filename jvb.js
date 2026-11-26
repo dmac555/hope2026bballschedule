@@ -21,6 +21,7 @@ let renderedMessagesKey = '';
 let availabilityVersion = 0;
 let availabilityEventId = null;
 let myAvailability = null;
+let selectedMessage = null;
 
 function showStatus(id, message) {
   const element = document.getElementById(id);
@@ -96,7 +97,7 @@ function setAvailabilityBusy(busy) {
 
 async function loadAvailability(version, eventId) {
   try {
-    const { data, error } = await client.rpc('hope_jvb_get_availability', { p_event_id: eventId });
+    const { data, error } = await client.rpc('hope_jvb_get_availability_details', { p_event_id: eventId });
     if (error) throw error;
     if (version !== availabilityVersion) return;
     if (!data || !data[0]) throw new Error('Missing availability totals');
@@ -104,6 +105,8 @@ async function loadAvailability(version, eventId) {
     myAvailability = totals.my_attending;
     document.getElementById('attendingCount').textContent = totals.attending_count;
     document.getElementById('notAttendingCount').textContent = totals.not_attending_count;
+    document.getElementById('attendingNames').textContent = totals.attending_names.join(', ') || 'None yet';
+    document.getElementById('notAttendingNames').textContent = totals.not_attending_names.join(', ') || 'None yet';
     document.getElementById('attendingButton').setAttribute('aria-pressed', String(myAvailability === true));
     document.getElementById('notAttendingButton').setAttribute('aria-pressed', String(myAvailability === false));
     showStatus('availabilityStatus', account.is_coach ? 'Player responses only.' : '');
@@ -161,6 +164,8 @@ function showEvent(eventItem) {
   myAvailability = null;
   document.getElementById('attendingCount').textContent = '--';
   document.getElementById('notAttendingCount').textContent = '--';
+  document.getElementById('attendingNames').textContent = '';
+  document.getElementById('notAttendingNames').textContent = '';
   document.getElementById('attendingButton').setAttribute('aria-pressed', 'false');
   document.getElementById('notAttendingButton').setAttribute('aria-pressed', 'false');
   setAvailabilityBusy(true);
@@ -239,6 +244,93 @@ function updateChatRecipient() {
   }
 }
 
+function hideMessageMenu() {
+  document.getElementById('messageMenu').hidden = true;
+}
+
+function showMessageMenu(message, x, y) {
+  selectedMessage = message;
+  const menu = document.getElementById('messageMenu');
+  menu.hidden = false;
+  menu.style.left = `${Math.max(4, Math.min(x, window.innerWidth - menu.offsetWidth - 4))}px`;
+  menu.style.top = `${Math.max(4, Math.min(y, window.innerHeight - menu.offsetHeight - 4))}px`;
+  document.getElementById('editMessage').focus();
+}
+
+function addMessageActions(wrapper, meta, message) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'message-actions';
+  button.setAttribute('aria-label', 'Message actions');
+  button.title = 'Message actions';
+  const icon = document.createElement('i');
+  icon.className = 'fa-solid fa-ellipsis';
+  icon.setAttribute('aria-hidden', 'true');
+  button.appendChild(icon);
+  meta.appendChild(button);
+  button.addEventListener('click', () => {
+    const bounds = button.getBoundingClientRect();
+    showMessageMenu(message, bounds.left, bounds.bottom);
+  });
+  wrapper.addEventListener('contextmenu', event => {
+    event.preventDefault();
+    showMessageMenu(message, event.clientX, event.clientY);
+  });
+  let holdTimer;
+  let startX;
+  let startY;
+  wrapper.addEventListener('pointerdown', event => {
+    if (event.pointerType !== 'touch' || event.target.closest('button')) return;
+    startX = event.clientX;
+    startY = event.clientY;
+    holdTimer = window.setTimeout(() => showMessageMenu(message, startX, startY), 550);
+  });
+  wrapper.addEventListener('pointermove', event => {
+    if (Math.abs(event.clientX - startX) > 10 || Math.abs(event.clientY - startY) > 10) window.clearTimeout(holdTimer);
+  });
+  wrapper.addEventListener('pointerup', () => window.clearTimeout(holdTimer));
+  wrapper.addEventListener('pointercancel', () => window.clearTimeout(holdTimer));
+}
+
+async function saveMessageEdit(event) {
+  event.preventDefault();
+  const body = document.getElementById('editMessageInput').value.trim();
+  if (!body) {
+    showStatus('editMessageStatus', 'Enter a message.');
+    return;
+  }
+  if (!selectedMessage) return;
+  const button = document.getElementById('saveMessageEdit');
+  button.disabled = true;
+  showStatus('editMessageStatus', '');
+  try {
+    const { data, error } = await client.from('hope_jvb_messages').update({ body }).eq('id', selectedMessage.id).select('id');
+    if (error) throw error;
+    if (!data || !data.length) throw new Error('Message unavailable');
+    document.getElementById('editMessageDialog').close();
+    await renderMessages();
+  } catch (error) {
+    console.error('JVB message edit failed:', error);
+    showStatus('editMessageStatus', 'Unable to edit this message. Please try again.');
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function deleteSelectedMessage() {
+  hideMessageMenu();
+  if (!selectedMessage || !window.confirm('Delete this message?')) return;
+  try {
+    const { data, error } = await client.from('hope_jvb_messages').delete().eq('id', selectedMessage.id).select('id');
+    if (error) throw error;
+    if (!data || !data.length) throw new Error('Message unavailable');
+    await renderMessages();
+  } catch (error) {
+    console.error('JVB message deletion failed:', error);
+    showStatus('chatStatus', 'Unable to delete this message. Please try again.');
+  }
+}
+
 async function renderMessages() {
   const channel = activeView;
   if (channel !== 'team' && channel !== 'direct') return;
@@ -259,7 +351,7 @@ async function renderMessages() {
     if (error) throw error;
     if (version !== requestVersion) return;
     const messages = (data || []).slice().reverse();
-    const messagesKey = `${channel}:${participant || ''}:${messages.map(message => message.id).join(',')}`;
+    const messagesKey = JSON.stringify([channel, participant, messages.map(message => [message.id, message.body])]);
     if (messagesKey === renderedMessagesKey) {
       showStatus('chatStatus', messages.length ? '' : 'No messages yet.');
       return;
@@ -278,6 +370,7 @@ async function renderMessages() {
       const body = document.createElement('p');
       body.className = 'message-body';
       body.textContent = message.body;
+      if (message.sender_id === account.account_id) addMessageActions(wrapper, meta, message);
       wrapper.append(meta, body);
       messageList.appendChild(wrapper);
     });
@@ -290,6 +383,7 @@ async function renderMessages() {
 }
 
 function setView(view) {
+  hideMessageMenu();
   activeView = view;
   requestVersion++;
   renderedMessagesKey = '';
@@ -359,6 +453,20 @@ async function initializeTeam() {
   document.getElementById('notAttendingButton').addEventListener('click', () => setAvailability(false));
   document.getElementById('eventDialog').addEventListener('close', () => { availabilityVersion++; availabilityEventId = null; });
   document.getElementById('messageForm').addEventListener('submit', sendMessage);
+  document.getElementById('editMessage').addEventListener('click', () => {
+    hideMessageMenu();
+    if (!selectedMessage) return;
+    document.getElementById('editMessageInput').value = selectedMessage.body;
+    showStatus('editMessageStatus', '');
+    document.getElementById('editMessageDialog').showModal();
+    document.getElementById('editMessageInput').focus();
+  });
+  document.getElementById('deleteMessage').addEventListener('click', deleteSelectedMessage);
+  document.getElementById('editMessageForm').addEventListener('submit', saveMessageEdit);
+  document.getElementById('cancelMessageEdit').addEventListener('click', () => document.getElementById('editMessageDialog').close());
+  document.addEventListener('pointerdown', event => { if (!event.target.closest('#messageMenu')) hideMessageMenu(); });
+  document.addEventListener('keydown', event => { if (event.key === 'Escape') hideMessageMenu(); });
+  document.getElementById('messages').addEventListener('scroll', hideMessageMenu);
   document.getElementById('signOut').addEventListener('click', async () => {
     window.clearInterval(refreshTimer);
     await client.auth.signOut();

@@ -66,6 +66,19 @@
     </section>
   </main>
   <p id="loadingStatus" class="loading" role="status">Loading…</p>
+  <div id="messageMenu" class="message-menu" role="menu" aria-label="Message actions" hidden>
+    <button id="editMessage" type="button" role="menuitem"><i class="fa-solid fa-pen" aria-hidden="true"></i> Edit</button>
+    <button id="deleteMessage" type="button" role="menuitem"><i class="fa-solid fa-trash" aria-hidden="true"></i> Delete</button>
+  </div>
+  <dialog id="editMessageDialog" aria-labelledby="editMessageTitle">
+    <form id="editMessageForm">
+      <h2 id="editMessageTitle">Edit message</h2>
+      <label class="sr-only" for="editMessageInput">Message</label>
+      <textarea id="editMessageInput" maxlength="2000" rows="4" required></textarea>
+      <p id="editMessageStatus" class="status error" role="status" hidden></p>
+      <div class="edit-message-actions"><button id="cancelMessageEdit" type="button" class="quiet-button">Cancel</button><button id="saveMessageEdit" type="submit" class="primary-button">Save</button></div>
+    </form>
+  </dialog>
   <dialog id="eventDialog">
     <form method="dialog" class="dialog-header"><h2 id="eventTitle"></h2><button class="icon-button" aria-label="Close event" title="Close event"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></form>
     <dl id="eventDetails" class="event-details"></dl>
@@ -75,7 +88,10 @@
         <button id="attendingButton" class="icon-button availability-button attending" type="button" aria-label="Attending" title="Attending" aria-pressed="false" disabled><i class="fa-solid fa-check" aria-hidden="true"></i></button>
         <button id="notAttendingButton" class="icon-button availability-button not-attending" type="button" aria-label="Not attending" title="Not attending" aria-pressed="false" disabled><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
       </div>
-      <div class="availability-totals" aria-live="polite"><span><strong id="attendingCount">--</strong> Attending</span><span><strong id="notAttendingCount">--</strong> Not attending</span></div>
+      <div class="availability-totals" aria-live="polite">
+        <div><strong id="attendingCount">--</strong> Attending<p id="attendingNames" class="availability-names"></p></div>
+        <div><strong id="notAttendingCount">--</strong> Not attending<p id="notAttendingNames" class="availability-names"></p></div>
+      </div>
       <p id="availabilityStatus" class="status" role="status" hidden></p>
     </section>
   </dialog>

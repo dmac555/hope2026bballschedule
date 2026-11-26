@@ -82,7 +82,8 @@ alter table public.hope_jvb_accounts enable row level security;
 alter table public.hope_jvb_sessions enable row level security;
 alter table public.hope_jvb_messages enable row level security;
 revoke all on public.hope_jvb_accounts, public.hope_jvb_sessions, public.hope_jvb_messages from anon, authenticated;
-grant select, insert on public.hope_jvb_messages to authenticated;
+grant select, insert, delete on public.hope_jvb_messages to authenticated;
+grant update (body) on public.hope_jvb_messages to authenticated;
 
 drop policy if exists hope_jvb_read_messages on public.hope_jvb_messages;
 create policy hope_jvb_read_messages on public.hope_jvb_messages for select to authenticated
@@ -90,6 +91,21 @@ using (
   public.hope_jvb_account_id() is not null
   and (channel = 'team' or participant_id = public.hope_jvb_account_id()
     or exists (select 1 from public.hope_jvb_session() where is_coach))
+);
+
+drop policy if exists hope_jvb_edit_messages on public.hope_jvb_messages;
+create policy hope_jvb_edit_messages on public.hope_jvb_messages for update to authenticated
+using (
+  sender_id = public.hope_jvb_account_id()
+)
+with check (
+  sender_id = public.hope_jvb_account_id()
+);
+
+drop policy if exists hope_jvb_delete_messages on public.hope_jvb_messages;
+create policy hope_jvb_delete_messages on public.hope_jvb_messages for delete to authenticated
+using (
+  sender_id = public.hope_jvb_account_id()
 );
 
 drop policy if exists hope_jvb_send_messages on public.hope_jvb_messages;
@@ -177,5 +193,24 @@ revoke all on function public.hope_jvb_get_availability(text) from public, anon;
 revoke all on function public.hope_jvb_set_availability(text, boolean) from public, anon;
 grant execute on function public.hope_jvb_get_availability(text) to authenticated;
 grant execute on function public.hope_jvb_set_availability(text, boolean) to authenticated;
+
+create or replace function public.hope_jvb_get_availability_details(p_event_id text)
+returns table (attending_count bigint, not_attending_count bigint, my_attending boolean,
+  attending_names text[], not_attending_names text[])
+language sql stable security definer set search_path = public, pg_temp
+as $$
+  select totals.attending_count, totals.not_attending_count, totals.my_attending,
+    coalesce(array_agg(accounts.display_name order by accounts.display_name)
+      filter (where response.attending), array[]::text[]),
+    coalesce(array_agg(accounts.display_name order by accounts.display_name)
+      filter (where not response.attending), array[]::text[])
+  from public.hope_jvb_get_availability(p_event_id) totals
+  left join public.hope_jvb_availability response on response.event_id = p_event_id
+  left join public.hope_jvb_accounts accounts on accounts.id = response.account_id
+  group by totals.attending_count, totals.not_attending_count, totals.my_attending
+$$;
+
+revoke all on function public.hope_jvb_get_availability_details(text) from public, anon;
+grant execute on function public.hope_jvb_get_availability_details(text) to authenticated;
 
 commit;

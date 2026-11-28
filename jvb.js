@@ -239,7 +239,9 @@ function selectedParticipant() {
 
 function updateNotificationButton(enabled) {
   const button = document.getElementById('notificationToggle');
-  const label = enabled ? 'Disable notifications' : 'Enable notifications';
+  const label = enabled ? 'Notifications on. Disable notifications' : 'Notifications off. Enable notifications';
+  button.dataset.state = enabled ? 'on' : 'off';
+  document.getElementById('notificationToggleLabel').textContent = enabled ? 'ON' : 'OFF';
   button.setAttribute('aria-pressed', String(enabled));
   button.setAttribute('aria-label', label);
   button.title = label;
@@ -499,16 +501,28 @@ function setView(view) {
     button.setAttribute('aria-pressed', String(selected));
   });
   document.getElementById('calendarView').hidden = view !== 'calendar';
-  document.getElementById('chatView').hidden = view === 'calendar';
+  document.getElementById('chatView').hidden = view !== 'team' && view !== 'direct';
+  document.getElementById('settingsView').hidden = view !== 'settings';
   if (view === 'calendar') {
     renderCalendar();
     return;
   }
+  if (view === 'settings') return;
   document.getElementById('chatTitle').textContent = view === 'team' ? 'Team Chat' : 'Individual Chat';
   document.getElementById('conversationControl').hidden = view !== 'direct' || !account.is_coach;
   updateChatRecipient();
   document.getElementById('messages').replaceChildren();
   renderMessages();
+}
+
+function setSettingsPlatform(platform) {
+  document.querySelectorAll('.settings-platform-option').forEach(button => {
+    const selected = button.dataset.platform === platform;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+  });
+  document.getElementById('iphoneDirections').hidden = platform !== 'iphone';
+  document.getElementById('androidDirections').hidden = platform !== 'android';
 }
 
 async function sendMessage(event) {
@@ -553,6 +567,7 @@ async function initializeTeam() {
   });
   select.addEventListener('change', () => { renderedMessagesKey = ''; updateChatRecipient(); document.getElementById('messages').replaceChildren(); renderMessages(); });
   document.querySelectorAll('.tab').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));
+  document.querySelectorAll('.settings-platform-option').forEach(button => button.addEventListener('click', () => setSettingsPlatform(button.dataset.platform)));
   document.getElementById('previousMonth').addEventListener('click', () => { if (monthIndex > 0) { monthIndex--; renderCalendar(); } });
   document.getElementById('nextMonth').addEventListener('click', () => { if (monthIndex < SCHEDULE_MONTHS.length - 1) { monthIndex++; renderCalendar(); } });
   document.getElementById('attendingButton').addEventListener('click', () => setAvailability(true));

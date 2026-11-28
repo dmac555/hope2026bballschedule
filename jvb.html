@@ -16,17 +16,21 @@
 <body data-page="team">
   <main id="app" class="app" hidden>
     <header class="topbar">
-      <div class="brand">
-        <img class="brand-icon" src="./hope-rec-logo.svg" alt="">
-        <div><p class="eyebrow">Hope Rec. Basketball</p><h1>JVB Team</h1></div>
+      <div class="brand-block">
+        <div class="brand">
+          <img class="brand-icon" src="./hope-rec-logo.svg" alt="">
+          <div><p class="eyebrow">Hope Rec. Basketball</p><h1>JVB Team</h1></div>
+        </div>
+        <span id="accountName" class="account-name"></span>
       </div>
-      <div class="account"><span id="accountName"></span><div class="account-actions"><button id="notificationToggle" class="icon-button" type="button" title="Enable notifications" aria-label="Enable notifications" aria-pressed="false" disabled><i class="fa-regular fa-bell" aria-hidden="true"></i></button><button id="signOut" class="quiet-button" type="button">Sign out</button></div></div>
+      <div class="account-actions"><button id="notificationToggle" class="icon-button notification-toggle" type="button" data-state="off" title="Enable notifications" aria-label="Notifications off. Enable notifications" aria-pressed="false" disabled><i class="fa-regular fa-bell" aria-hidden="true"></i><span id="notificationToggleLabel">OFF</span></button><button id="signOut" class="quiet-button" type="button">Sign out</button></div>
     </header>
     <p id="notificationStatus" class="status" role="status" hidden></p>
     <nav class="tabs" aria-label="JVB sections">
       <button type="button" class="tab active" data-view="calendar" aria-pressed="true"><i class="fa-regular fa-calendar" aria-hidden="true"></i> Calendar</button>
       <button type="button" class="tab" data-view="team" aria-pressed="false"><i class="fa-regular fa-comments" aria-hidden="true"></i> Team Chat</button>
       <button type="button" class="tab" data-view="direct" aria-pressed="false"><i class="fa-regular fa-comment" aria-hidden="true"></i> Individual Chat</button>
+      <button type="button" class="tab" data-view="settings" aria-pressed="false"><i class="fa-solid fa-gear" aria-hidden="true"></i> Settings</button>
     </nav>
     <p id="appError" class="status error" role="alert" hidden></p>
     <section id="calendarView" class="view" aria-labelledby="monthTitle">
@@ -65,6 +69,27 @@
           <button id="sendMessage" class="primary-button" type="submit"><i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Send</button>
         </form>
       </div>
+    </section>
+    <section id="settingsView" class="view settings-view" aria-labelledby="settingsTitle" hidden>
+      <p class="eyebrow">JVB Team</p>
+      <h2 id="settingsTitle">Settings</h2>
+      <fieldset class="settings-platform">
+        <legend>I have a</legend>
+        <div class="settings-platform-options" role="group" aria-label="Device type">
+          <button type="button" class="settings-platform-option active" data-platform="iphone" aria-pressed="true">iPhone</button>
+          <button type="button" class="settings-platform-option" data-platform="android" aria-pressed="false">Android</button>
+        </div>
+      </fieldset>
+      <ol id="iphoneDirections" class="settings-steps" aria-label="iPhone setup directions">
+        <li><span class="settings-step-number">Step 1</span><span>Tap the <i class="fa-solid fa-arrow-up-from-bracket" aria-hidden="true"></i> Share button on your toolbar.</span></li>
+        <li><span class="settings-step-number">Step 2</span><span>Scroll down and tap <strong>Add to Home Screen</strong>. This adds the tool as an app on your phone.</span></li>
+        <li><span class="settings-step-number">Step 3</span><span>If the bell in the header says <strong>OFF</strong>, tap it to enable notifications. Tap <strong>Allow</strong> in the popup. The bell will show <strong>ON</strong> when notifications are enabled.</span></li>
+      </ol>
+      <ol id="androidDirections" class="settings-steps" aria-label="Android setup directions" hidden>
+        <li><span class="settings-step-number">Step 1</span><span>In Chrome, tap the three-dot menu.</span></li>
+        <li><span class="settings-step-number">Step 2</span><span>Tap <strong>Install app</strong> or <strong>Add to Home screen</strong>. This adds the tool as an app on your phone.</span></li>
+        <li><span class="settings-step-number">Step 3</span><span>If the bell in the header says <strong>OFF</strong>, tap it to enable notifications. Tap <strong>Allow</strong> when prompted. The bell will show <strong>ON</strong> when notifications are enabled.</span></li>
+      </ol>
     </section>
   </main>
   <p id="loadingStatus" class="loading" role="status">Loading…</p>

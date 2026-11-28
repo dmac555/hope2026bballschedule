@@ -73,6 +73,8 @@ button:disabled { opacity: .45; cursor: default; }
 .calendar-grid { gap: 1px; background: #404040; }
 .day { min-width: 0; min-height: 108px; padding: 8px; background: #1d1d1d; }
 .day.outside { background: #121212; }
+.day.today { background: #302747; box-shadow: inset 0 0 0 2px #c4b5fd; }
+.day.today .day-number { color: #fff; }
 .day-number { display: block; color: #d4d4d4; font-size: 12px; font-weight: 700; margin-bottom: 6px; }
 .outside .day-number { color: #737373; }
 .event { display: block; width: 100%; border: 0; border-left: 2px solid #a78bfa; border-radius: 3px; background: #2b2040; color: #ede9fe; text-align: left; font-size: 11px; font-weight: 600; line-height: 1.3; padding: 5px 6px; margin-bottom: 4px; overflow-wrap: anywhere; }

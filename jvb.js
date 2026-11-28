@@ -183,6 +183,7 @@ async function renderCalendar() {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const cellCount = Math.ceil((monthDate.getDay() + daysInMonth) / 7) * 7;
   const lastDay = new Date(year, month, cellCount - monthDate.getDay());
+  const todayString = formatDate(new Date());
   const grid = document.getElementById('calendarGrid');
   document.getElementById('monthTitle').textContent = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   document.getElementById('previousMonth').disabled = monthIndex === 0;
@@ -209,7 +210,9 @@ async function renderCalendar() {
       const date = new Date(year, month, index + 1 - monthDate.getDay());
       const dateString = formatDate(date);
       const cell = document.createElement('div');
-      cell.className = date.getMonth() === month ? 'day' : 'day outside';
+      const dayClass = date.getMonth() === month ? 'day' : 'day outside';
+      cell.className = dateString === todayString ? `${dayClass} today` : dayClass;
+      if (dateString === todayString) cell.setAttribute('aria-current', 'date');
       const dayNumber = document.createElement('span');
       dayNumber.className = 'day-number';
       dayNumber.textContent = String(date.getDate());

@@ -493,6 +493,7 @@ async function renderMessages() {
 function setView(view) {
   hideMessageMenu();
   activeView = view;
+  document.body.classList.toggle('chat-active', view === 'team' || view === 'direct');
   requestVersion++;
   renderedMessagesKey = '';
   document.querySelectorAll('.tab').forEach(button => {
